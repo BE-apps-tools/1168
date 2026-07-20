@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="icon" href="data:,">
+<title>Deliveries | Blattner</title>
+<style>
+  :root{
+    --dark-blue:#02568A; --energy-blue:#2DA2DB; --light-blue:#B9E5FB;
+    --bright-gray:#F2F2F2; --light-gray:#BCBCBC; --medium-gray:#76777B;
+    --dark-gray:#333333; --white:#FFFFFF; --black:#000000;
+    --r:14px; --r-sm:10px; --r-lg:20px;
+    --shadow:0 1px 4px #BCBCBC; --shadow-lift:0 10px 24px #BCBCBC;
+    --rail-w:88px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{overflow-x:hidden;}
+  body{font-family:Arial, Helvetica, sans-serif;color:var(--dark-gray);background:var(--bright-gray);line-height:1.5;-webkit-text-size-adjust:100%;}
+  h1,h2,h3{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;color:var(--dark-blue);line-height:1.05;}
+  a{color:var(--energy-blue);}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+  @keyframes railIn{from{opacity:0;transform:translateX(-10px);}to{opacity:1;transform:none;}}
+
+  /* ---------- App shell ---------- */
+  .app-shell{display:flex;min-height:100vh;align-items:stretch;}
+  .nav-rail{flex:0 0 var(--rail-w);width:var(--rail-w);background:var(--dark-blue);color:var(--white);
+    display:flex;flex-direction:column;align-items:stretch;padding:16px 8px 14px;position:sticky;top:0;height:100vh;
+    animation:railIn .3s ease both;}
+  .rail-logo{display:block;width:46px;height:46px;margin:0 auto 22px;}
+  .rail-logo svg{width:100%;height:100%;display:block;}
+  .rail-item{display:block;text-align:center;color:var(--light-blue);text-decoration:none;padding:12px 4px;
+    border-radius:var(--r-sm);margin-bottom:6px;transition:background .18s ease,color .18s ease,transform .18s ease;}
+  .rail-item:hover{background:var(--energy-blue);color:var(--white);transform:translateY(-2px);}
+  .rail-item.active{background:var(--white);color:var(--dark-blue);}
+  .rail-ic{width:20px;height:20px;margin:0 auto 7px;position:relative;display:block;}
+  .ic-hub::before{content:"";position:absolute;left:0;top:0;width:8px;height:8px;border-radius:2px;background:currentColor;
+    box-shadow:12px 0 0 currentColor,0 12px 0 currentColor,12px 12px 0 currentColor;}
+  .ic-assets::before{content:"";position:absolute;left:0;top:2px;width:20px;height:3px;border-radius:2px;background:currentColor;
+    box-shadow:0 7px 0 currentColor,0 14px 0 currentColor;}
+  .ic-deliv::before{content:"";position:absolute;left:1px;top:1px;width:18px;height:18px;border:2px solid currentColor;border-radius:3px;}
+  .ic-deliv::after{content:"";position:absolute;left:6px;top:7px;width:5px;height:9px;border:2px solid currentColor;
+    border-top:none;border-left:none;transform:rotate(45deg);}
+  .rail-lbl{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:9px;letter-spacing:0.04em;display:block;}
+  .rail-foot{margin-top:auto;text-align:center;font-family:'Arial Black', Arial, sans-serif;font-size:10px;
+    letter-spacing:0.12em;color:var(--energy-blue);padding-top:12px;}
+  .app-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{background:var(--dark-blue);color:var(--white);padding:18px 32px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .topbar .titles{min-width:0;}
+  .topbar h1{color:var(--white);font-size:20px;}
+  .topbar .sub{font-size:11px;text-transform:uppercase;letter-spacing:0.10em;color:var(--light-blue);font-weight:bold;margin-top:3px;}
+  .topbar .spacer{flex:1;}
+
+  main{max-width:1200px;width:100%;margin:0 auto;padding:22px 32px 56px;}
+
+  .adminbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+  .adminbar .who{font-size:12px;color:var(--medium-gray);font-weight:bold;text-transform:uppercase;letter-spacing:0.05em;}
+  .banner{display:none;padding:10px 14px;font-size:12px;font-weight:bold;background:var(--light-blue);color:var(--dark-blue);border:1px solid var(--energy-blue);border-radius:var(--r-sm);margin-bottom:14px;}
+  .banner.show{display:block;}
+
+  .toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px;}
+  .toolbar .search{flex:1 1 220px;min-width:0;}
+  input[type=text],input[type=file],select{width:100%;font-family:Arial, Helvetica, sans-serif;font-size:16px;color:var(--dark-gray);background:var(--white);border:1px solid var(--light-gray);border-radius:var(--r-sm);padding:11px 13px;transition:border-color .15s ease,box-shadow .15s ease;}
+  select{flex:0 1 auto;min-width:150px;}
+  input:focus,select:focus{outline:none;border-color:var(--energy-blue);box-shadow:0 0 0 2px var(--light-blue);}
+  .seg{display:inline-flex;border:1px solid var(--light-gray);border-radius:999px;overflow:hidden;}
+  .seg button{background:var(--white);border:none;font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:11px;letter-spacing:0.04em;color:var(--medium-gray);padding:10px 18px;cursor:pointer;transition:background .18s ease,color .18s ease;}
+  .seg button[aria-selected="true"]{background:var(--dark-blue);color:var(--white);}
+
+  .btn{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:12px;letter-spacing:0.04em;padding:11px 16px;border:1px solid var(--dark-blue);background:var(--dark-blue);color:var(--white);cursor:pointer;border-radius:var(--r-sm);display:inline-flex;align-items:center;gap:8px;min-height:40px;transition:background .18s ease,border-color .18s ease,transform .18s ease;}
+  .btn:hover{background:var(--energy-blue);border-color:var(--energy-blue);transform:translateY(-1px);}
+  .btn.small{font-size:11px;padding:8px 11px;min-height:34px;}
+  .btn.secondary{background:var(--white);color:var(--dark-blue);border-color:var(--light-gray);}
+  .btn.secondary:hover{background:var(--bright-gray);border-color:var(--dark-blue);}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+
+  .card{background:var(--white);border:1px solid var(--light-gray);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);}
+  .card-head{background:var(--dark-blue);padding:14px 18px;}
+  .card-head h2{color:var(--white);font-size:15px;}
+  .card-body{padding:18px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:0.06em;color:var(--medium-gray);margin-bottom:6px;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:520px){ .two-col{grid-template-columns:1fr;} }
+
+  #newPanel{display:none;margin-bottom:20px;}
+  #newPanel.show{display:block;}
+
+  .table-scroll{overflow-x:auto;min-width:0;border:1px solid var(--light-gray);border-radius:var(--r-sm);background:var(--white);}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{background:var(--dark-blue);color:var(--white);font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:10px;letter-spacing:0.06em;text-align:left;padding:11px 12px;white-space:nowrap;}
+  tbody td{padding:10px 12px;border-bottom:1px solid var(--bright-gray);vertical-align:top;}
+  tbody tr:nth-child(even){background:var(--bright-gray);}
+
+  /* Progress meters + rings */
+  .lmeter{height:5px;background:var(--bright-gray);border-radius:3px;overflow:hidden;margin-top:6px;min-width:64px;max-width:120px;}
+  .lmeter>span{display:block;height:100%;background:var(--energy-blue);border-radius:3px;width:0;transition:width .8s ease;}
+  .lmeter.done>span{background:var(--dark-blue);}
+  .ring-wrap{position:relative;width:52px;height:52px;flex:0 0 52px;}
+  .ring-wrap .ring-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:'Arial Black', Arial, sans-serif;font-size:12px;color:var(--dark-blue);}
+  svg.chart.ring{width:100%;height:100%;display:block;}
+  .ring-fg{transition:stroke-dashoffset 1s ease;}
+
+  .trk{border:1px solid var(--light-gray);border-left:4px solid var(--energy-blue);border-radius:var(--r);background:var(--white);margin-bottom:14px;box-shadow:var(--shadow);transition:box-shadow .2s ease,transform .2s ease;animation:fadeUp .4s ease both;}
+  .trk:hover{box-shadow:var(--shadow-lift);transform:translateY(-2px);}
+  .trk .top{padding:14px 18px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;cursor:pointer;}
+  .trk .req{font-family:'Arial Black', Arial, sans-serif;color:var(--dark-blue);font-size:15px;}
+  .trk .meta{font-size:12px;color:var(--medium-gray);}
+  .trk .prog{margin-left:auto;display:flex;align-items:center;gap:14px;}
+  .trk .prog .lines{font-size:12px;font-weight:bold;color:var(--dark-blue);text-align:right;white-space:nowrap;}
+  .trk .detail{display:none;padding:0 18px 18px;}
+  .trk.open .detail{display:block;}
+  .badge{display:inline-block;background:var(--bright-gray);border:1px solid var(--light-gray);color:var(--dark-blue);border-radius:999px;font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:0.04em;padding:3px 10px;white-space:nowrap;}
+  .st-none{color:var(--medium-gray);} .st-partial{color:var(--energy-blue);} .st-complete{color:var(--dark-blue);}
+
+  .empty{padding:44px 20px;text-align:center;color:var(--medium-gray);background:var(--white);border:1px solid var(--light-gray);border-radius:var(--r);box-shadow:var(--shadow);}
+  .empty .big{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;color:var(--light-gray);font-size:18px;margin-bottom:6px;}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--dark-blue);color:var(--white);padding:12px 22px;font-weight:bold;font-size:13px;text-transform:uppercase;letter-spacing:0.04em;border-radius:var(--r-sm);border-left:4px solid var(--energy-blue);display:none;z-index:60;max-width:90vw;text-align:center;box-shadow:var(--shadow-lift);}
+  .toast.show{display:block;}
+
+  @media (max-width:820px){
+    :root{--rail-w:100%;}
+    .app-shell{flex-direction:column;}
+    .nav-rail{flex-direction:row;height:auto;position:static;padding:8px;align-items:center;gap:6px;}
+    .rail-logo{margin:0 8px 0 4px;width:38px;height:38px;flex:0 0 38px;}
+    .rail-item{flex:1;margin-bottom:0;padding:8px 4px;}
+    .rail-ic{width:18px;height:18px;margin:0 auto 4px;}
+    .rail-foot{display:none;}
+  }
+  @media (max-width:560px){ .topbar{padding:14px 16px;} main{padding:16px 16px 44px;} .topbar h1{font-size:17px;} }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="nav-rail" aria-label="Primary">
+    <a class="rail-logo" href="index.html" aria-label="Blattner"><svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 400 400" style="enable-background:new 0 0 400 400;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#FFFFFF;}
+</style>
+<g>
+	<polygon class="st0" points="215.2,164.1 231.7,122.3 195,122.3 	"/>
+	<path class="st0" d="M233.4,200l0.1,0.2c0,0,0-0.1,0.1-0.1L233.4,200z"/>
+	<path class="st0" d="M233.5,200.2l20.7,24.4c7.9-3.4,13.5-8.4,17.7-15.1l-38.4-9.5C233.6,200.1,233.5,200.2,233.5,200.2"/>
+	<path class="st0" d="M278.4,128.5l-38.3,42.9l-4.3,4.8l4.9-0.2l43.1-1.6l-45.3,13.9l0,0l-0.4,0.1l0.3,0.2h0l33.6,20.9
+		c4.2-6.6,7-14.8,9.5-24.9l2.7-11C289.4,152.7,289.2,136.7,278.4,128.5"/>
+	<polygon class="st0" points="202.5,163.7 195,122.3 167.4,122.3 	"/>
+	<path class="st0" d="M254.5,122.3h-22.8l-4.3,43.1l-0.2,1.7l2.1-1.6l49-37C273.1,124.5,265.4,122.3,254.5,122.3"/>
+	<path class="st0" d="M209.6,206.5H116l8.1-33h77.5l-43-50.7H83.8L31.8,334.1h168.4c30.3,0,55.3-9.6,66.4-56
+		c6.5-27.1,1.1-43.5-19.3-50.5l-22.9-27.1C220.8,204.7,215.8,206.5,209.6,206.5 M214.8,267.8c-3,12.3-11.4,15.5-22.9,15.5H97.2
+		l8.1-33h94.8C211.5,250.3,218.3,253.5,214.8,267.8"/>
+	<polygon class="st0" points="90.2,64.6 124.9,105.6 313.3,105.7 280.2,287.9 321.4,335.4 368.2,64.7 	"/>
+</g>
+</svg></a>
+    <a class="rail-item" href="index.html"><span class="rail-ic ic-hub"></span><span class="rail-lbl">Hub</span></a>
+    <a class="rail-item" href="inventory.html"><span class="rail-ic ic-assets"></span><span class="rail-lbl">Assets</span></a>
+    <a class="rail-item active" href="deliveries.html"><span class="rail-ic ic-deliv"></span><span class="rail-lbl">Deliveries</span></a>
+    <div class="rail-foot">BEI</div>
+  </nav>
+
+  <div class="app-body">
+    <header class="topbar">
+      <div class="titles">
+        <h1>Deliveries</h1>
+        <div class="sub">Blattner &middot; Req Material Tracking</div>
+      </div>
+      <div class="spacer"></div>
+    </header>
+
+    <main>
+      <div class="adminbar">
+        <button class="btn secondary small" id="adminBtn">Admin unlock</button>
+        <span class="who" id="adminWho" style="display:none;"></span>
+        <button class="btn small" id="newBtn" style="display:none;">New tracker</button>
+      </div>
+
+      <div class="banner" id="banner"></div>
+
+      <!-- New tracker (admin) -->
+      <div id="newPanel" class="card">
+        <div class="card-head"><h2>New delivery tracker</h2></div>
+        <div class="card-body">
+          <div class="two-col">
+            <div class="field"><label>Requisition # <span style="color:var(--dark-blue)">*</span></label>
+              <input type="text" id="reqNumber" autocomplete="off" placeholder="e.g. R-12345"></div>
+            <div class="field"><label>Trade <span style="color:var(--dark-blue)">*</span></label>
+              <select id="reqTrade"></select></div>
+          </div>
+          <div class="field"><label>Req form (.xlsx) <span style="color:var(--dark-blue)">*</span></label>
+            <input type="file" id="reqFile" accept=".xlsx"></div>
+          <div id="preview"></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+            <button class="btn" id="createBtn" disabled>Create tracker</button>
+            <button class="btn secondary" id="cancelNew">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search"><input type="text" id="q" aria-label="Search requisitions" placeholder="Search Req #, project, description…"></div>
+        <select id="fTrade"><option value="">All trades</option></select>
+        <div class="seg" role="tablist">
+          <button id="segActive" aria-selected="true">Active</button>
+          <button id="segDone" aria-selected="false">Completed</button>
+        </div>
+      </div>
+
+      <div id="list"></div>
+      <div class="empty" id="empty" style="display:none;"></div>
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const WORKER_URL = "https://asset-portal.site-asset-manager.workers.dev";
+const TRADES = ["Civil","Electrical","Foundation","Collection","Install","Mechanical",
+  "Commissioning","Substation","BESS","Safety","SM/PCC","Survey","Quality","TLine","Inventory","Decom","Other"];
+const STATE = { trackers:[], state:"open", admin:false, adminName:"", pendingParse:null };
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+let toastT=null;
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),3000); }
+function banner(msg){ const b=$("#banner"); if(!msg){b.classList.remove("show");return;} b.textContent=msg; b.classList.add("show"); }
+
+/* ---------- Excel date serial → ISO ---------- */
+function excelSerialToISO(v){
+  const s=String(v==null?"":v).trim(); if(!s) return "";
+  const n=Math.trunc(Number(s)); if(!isFinite(n)||n<=0) return "";
+  const d=new Date(Date.UTC(1899,11,30)+n*86400000);
+  return isNaN(d)?"":d.toISOString().slice(0,10);
+}
+function decodeXml(s){ return String(s).replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&#39;/g,"'"); }
+function colIndex(ref){ const m=/^([A-Z]+)/.exec(ref); let n=0; for(const ch of m[1]) n=n*26+(ch.charCodeAt(0)-64); return n-1; }
+
+/* ---------- Dependency-free xlsx reader (native DecompressionStream) ---------- */
+function readXlsxIndex(buf){
+  const dv=new DataView(buf), u8=new Uint8Array(buf), dec=new TextDecoder();
+  let eocd=-1;
+  for(let i=buf.byteLength-22;i>=0;i--){ if(dv.getUint32(i,true)===0x06054b50){ eocd=i; break; } }
+  if(eocd<0) throw new Error("Not a valid .xlsx (no zip end record)");
+  const cdOff=dv.getUint32(eocd+16,true), cdCount=dv.getUint16(eocd+10,true);
+  const entries={}; let p=cdOff;
+  for(let n=0;n<cdCount;n++){
+    if(dv.getUint32(p,true)!==0x02014b50) break;
+    const method=dv.getUint16(p+10,true), compSize=dv.getUint32(p+20,true);
+    const nameLen=dv.getUint16(p+28,true), extraLen=dv.getUint16(p+30,true), cmtLen=dv.getUint16(p+32,true);
+    const localOff=dv.getUint32(p+42,true);
+    const name=dec.decode(u8.subarray(p+46,p+46+nameLen));
+    entries[name]={method,compSize,localOff}; p+=46+nameLen+extraLen+cmtLen;
+  }
+  async function get(name){
+    const e=entries[name]; if(!e) return null;
+    const lNameLen=dv.getUint16(e.localOff+26,true), lExtraLen=dv.getUint16(e.localOff+28,true);
+    const start=e.localOff+30+lNameLen+lExtraLen;
+    const comp=u8.subarray(start,start+e.compSize);
+    if(e.method===0) return dec.decode(comp);
+    if(e.method===8){
+      if(typeof DecompressionStream==="undefined") throw new Error("This browser can't read .xlsx (no DecompressionStream) — use Chrome/Edge or recent Safari.");
+      const ab=await new Response(new Blob([comp]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer();
+      return dec.decode(new Uint8Array(ab));
+    }
+    throw new Error("Unsupported compression in .xlsx (method "+e.method+")");
+  }
+  return { names:Object.keys(entries), get };
+}
+function parseShared(xml){
+  if(!xml) return []; const out=[];
+  for(const m of xml.matchAll(/<si>([\s\S]*?)<\/si>/g)){
+    let t=""; for(const tm of m[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)) t+=tm[1];
+    out.push(decodeXml(t));
+  }
+  return out;
+}
+function sheetRows(xml, shared){
+  const rows=[];
+  for(const rm of xml.matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)){
+    const cells={}; let maxc=0;
+    for(const cm of rm[1].matchAll(/<c\s+r="([A-Z]+\d+)"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)){
+      const ref=cm[1], attrs=cm[2]||"", inner=cm[3]||"";
+      const ci=colIndex(ref); if(ci>maxc) maxc=ci;
+      const tm=/t="([^"]+)"/.exec(attrs); const ty=tm?tm[1]:""; let val="";
+      if(ty==="inlineStr"){ const im=/<t[^>]*>([\s\S]*?)<\/t>/.exec(inner); val=im?decodeXml(im[1]):""; }
+      else { const vm=/<v>([\s\S]*?)<\/v>/.exec(inner); if(vm){ val = ty==="s" ? (shared[parseInt(vm[1],10)]||"") : decodeXml(vm[1]); } }
+      cells[ci]=val;
+    }
+    const arr=[]; for(let i=0;i<=maxc;i++) arr.push(cells[i]!==undefined?cells[i]:"");
+    rows.push(arr);
+  }
+  return rows;
+}
+async function parseReqXlsx(file){
+  const zip=readXlsxIndex(await file.arrayBuffer());
+  const wb=await zip.get("xl/workbook.xml");
+  const rels=await zip.get("xl/_rels/workbook.xml.rels");
+  const shared=parseShared(await zip.get("xl/sharedStrings.xml"));
+  const relMap={};
+  for(const m of rels.matchAll(/<Relationship\s+[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"/g)) relMap[m[1]]=m[2];
+  const sheetPath={};
+  for(const m of wb.matchAll(/<sheet\s+[^>]*name="([^"]+)"[^>]*r:id="([^"]+)"/g)){
+    let t=relMap[m[2]]||""; if(t && !t.startsWith("xl/")) t="xl/"+t;
+    sheetPath[decodeXml(m[1])]=t;
+  }
+  const contact=sheetRows(await zip.get(sheetPath["Contact & Delivery Information"])||"", shared);
+  const jde=sheetRows(await zip.get(sheetPath["JDE Import"])||"", shared);
+  return { header:extractHeader(contact), lines:extractLines(jde) };
+}
+function extractHeader(rows){
+  const h={project:"",projectCode:"",shipTo:"",requisitioner:"",date:"",description:""};
+  const norm=s=>String(s||"").trim().replace(/:$/,"").toLowerCase();
+  const after=(row,i)=>{ for(let j=i+1;j<row.length;j++){ if(String(row[j]).trim()) return String(row[j]).trim(); } return ""; };
+  for(const row of rows) for(let i=0;i<row.length;i++){
+    const l=norm(row[i]);
+    if(l==="project name") h.project=after(row,i);
+    else if(l==="project #"||l==="project number"||l==="project#") h.projectCode=after(row,i);
+    else if(l==="ship to") h.shipTo=after(row,i);
+    else if(l==="requisitioner") h.requisitioner=after(row,i);
+    else if(l==="date") h.date=excelSerialToISO(after(row,i));
+    else if(l==="description") h.description=after(row,i);
+  }
+  return h;
+}
+function extractLines(rows){
+  if(!rows.length) return [];
+  const hdr=rows[0].map(x=>String(x||"").trim().toLowerCase());
+  const col=n=>hdr.indexOf(n);
+  const iLine=col("line #"), iD1=col("description 1"), iD2=col("description 2"),
+        iQty=col("quantity ordered"), iUom=col("tr. uom"), iReq=col("required date");
+  const out=[];
+  for(let r=1;r<rows.length;r++){
+    const row=rows[r];
+    const d1=iD1>=0?String(row[iD1]||"").trim():"";
+    const d2=iD2>=0?String(row[iD2]||"").trim():"";
+    const ln=iLine>=0?String(row[iLine]||"").trim():"";
+    if(!d1 && !ln) continue;
+    const qtyRaw=iQty>=0?String(row[iQty]||"").trim():"";
+    out.push({
+      line: ln? (parseInt(ln,10)||ln) : (out.length+1),
+      desc: d1 + (d2?(" "+d2):""),
+      qty: qtyRaw!==""? (Number(qtyRaw)||qtyRaw) : "",
+      uom: iUom>=0?String(row[iUom]||"").trim():"",
+      requiredDate: iReq>=0?excelSerialToISO(row[iReq]):""
+    });
+  }
+  return out;   /* NOTE: no cost/pricing field is ever produced */
+}
+
+/* ---------- admin (real key wired in Task 4; here it unlocks the UI) ---------- */
+function setAdmin(on){
+  STATE.admin=on;
+  $("#adminBtn").style.display=on?"none":"inline-flex";
+  $("#adminWho").style.display=on?"inline":"none";
+  $("#newBtn").style.display=on?"inline-flex":"none";
+  $("#adminWho").textContent=on?("Admin: "+STATE.adminName):"";
+  if(!on){ $("#newPanel").classList.remove("show"); }
+  render();
+}
+function adminUnlock(){
+  const name=prompt("Your name (shown on updates):"); if(name===null) return;
+  const key=prompt("Admin key:"); if(key===null) return;
+  STATE.adminName=name.trim()||"admin";
+  localStorage.setItem("bac_admin_name", STATE.adminName);
+  localStorage.setItem("bac_admin_key", key.trim());
+  setAdmin(true);
+  toast("Admin unlocked");
+}
+
+/* ---------- new tracker ---------- */
+function renderPreview(){
+  const p=STATE.pendingParse; const el=$("#preview");
+  if(!p){ el.innerHTML=""; $("#createBtn").disabled=true; return; }
+  const rows=p.lines.map(l=>'<tr><td>'+esc(l.line)+'</td><td>'+esc(l.desc)+'</td><td>'+esc(l.qty)+'</td><td>'+esc(l.uom)+'</td><td>'+esc(l.requiredDate)+'</td></tr>').join("");
+  el.innerHTML='<div class="field"><label>Parsed: '+esc(p.header.project)+' &middot; '+esc(p.header.description)+' &middot; '+p.lines.length+' lines</label></div>'+
+    '<div class="table-scroll"><table><thead><tr><th>Line</th><th>Description</th><th>Qty</th><th>UoM</th><th>Required</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  $("#createBtn").disabled = p.lines.length===0;
+}
+function buildReqPayload(){
+  const p=STATE.pendingParse;
+  return { reqNumber:$("#reqNumber").value.trim(), trade:$("#reqTrade").value,
+    project:p.header.project, projectCode:p.header.projectCode, shipTo:p.header.shipTo,
+    requisitioner:p.header.requisitioner, date:p.header.date, description:p.header.description, lines:p.lines };
+}
+const wbase = () => WORKER_URL.replace(/\/$/,"");
+function adminKey(){ return localStorage.getItem("bac_admin_key")||""; }
+async function createTracker(payload){
+  try{
+    const r=await fetch(wbase()+"/req",{method:"POST",headers:{"Content-Type":"application/json","x-admin-key":adminKey()},body:JSON.stringify(payload)});
+    if(!r.ok){ const e=await r.json().catch(()=>({})); return {ok:false,error:e.error||("HTTP "+r.status)}; }
+    return await r.json();
+  }catch(err){ return {ok:false,error:err.message}; }
+}
+async function loadTrackers(){
+  try{
+    const r=await fetch(wbase()+"/reqs?state="+STATE.state);
+    if(!r.ok){ STATE.trackers=[]; banner("Could not load trackers (HTTP "+r.status+")"); return; }
+    const d=await r.json(); STATE.trackers=d.trackers||[]; banner("");
+  }catch(err){ STATE.trackers=[]; banner("Offline — could not load trackers."); }
+}
+async function logDelivery(issue, line, qty, by){
+  const r=await fetch(wbase()+"/req/deliver",{method:"POST",headers:{"Content-Type":"application/json","x-admin-key":adminKey()},
+    body:JSON.stringify({issue, line, qty:Number(qty), by, loggedBy:STATE.adminName})});
+  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||("HTTP "+r.status)); }
+  return await r.json();
+}
+function lineReceived(l){ return (l.deliveries||[]).reduce((s,d)=>s+(Number(d.qty)||0),0); }
+function lineStatus(qty, received){ const q=Number(qty); if(received<=0) return "Not started"; if(!isFinite(q)) return "Complete"; return received>=q?"Complete":"Partial"; }
+function statusClass(s){ return s==="Complete"?"st-complete":(s==="Partial"?"st-partial":"st-none"); }
+function linePct(qty, received){ const q=Number(qty); if(!isFinite(q)||q<=0) return received>0?100:0; return Math.max(0,Math.min(100,Math.round(100*received/q))); }
+
+/* ---------- progress ring (chart svg) ---------- */
+function ringSvg(pct){
+  const p=Math.max(0,Math.min(100,pct));
+  return '<div class="ring-wrap"><svg class="chart ring" viewBox="0 0 48 48" aria-hidden="true">'+
+    '<circle cx="24" cy="24" r="20" fill="none" stroke="#B9E5FB" stroke-width="5"></circle>'+
+    '<circle class="ring-fg" cx="24" cy="24" r="20" fill="none" stroke="#2DA2DB" stroke-width="5" stroke-linecap="round" '+
+      'stroke-dasharray="125.66" stroke-dashoffset="125.66" data-pct="'+p+'" transform="rotate(-90 24 24)"></circle>'+
+    '</svg><div class="ring-val">'+p+'%</div></div>';
+}
+function animateProgress(root){
+  requestAnimationFrame(()=>{
+    (root||document).querySelectorAll(".ring-fg").forEach(el=>{
+      const p=Number(el.getAttribute("data-pct"))||0;
+      el.style.strokeDashoffset=(125.66*(1-p/100)).toFixed(1);
+    });
+    (root||document).querySelectorAll(".lmeter>span").forEach(el=>{
+      el.style.width=(Number(el.getAttribute("data-w"))||0)+"%";
+    });
+  });
+}
+
+/* ---------- render trackers ---------- */
+function viewTrackers(){
+  const q=$("#q").value.trim().toLowerCase(), tf=$("#fTrade").value;
+  let v=STATE.trackers.slice();
+  if(tf) v=v.filter(t=>t.trade===tf);
+  if(q) v=v.filter(t=>[t.reqNumber,t.project,t.description,t.trade].some(x=>String(x||"").toLowerCase().includes(q)));
+  return v;
+}
+function render(){
+  const list=$("#list"), empty=$("#empty"), v=viewTrackers();
+  if(!STATE.trackers.length){
+    list.innerHTML=""; empty.style.display="block";
+    empty.innerHTML='<div class="big">No '+(STATE.state==="open"?"active":"completed")+' trackers</div><div>'+(STATE.admin?"Use “New tracker” to add one.":"Nothing here yet.")+'</div>';
+    return;
+  }
+  if(!v.length){ list.innerHTML=""; empty.style.display="block"; empty.innerHTML='<div class="big">No matches</div><div>Adjust search or trade filter.</div>'; return; }
+  empty.style.display="none";
+  list.innerHTML=v.map(renderTracker).join("");
+  animateProgress(list);
+}
+function renderTracker(t){
+  const pct=t.linesTotal?Math.round(100*t.linesComplete/t.linesTotal):0;
+  const rows=(t.marker.lines||[]).map(l=>{
+    const rec=lineReceived(l), st=lineStatus(l.qty,rec), lp=linePct(l.qty,rec);
+    const hist=(l.deliveries||[]).map(d=>esc(d.qty)+" · "+esc(d.date)+" · "+esc(d.by||"")+(d.loggedBy?(" ("+esc(d.loggedBy)+")"):"")).join("<br>");
+    const remaining=Math.max(0,(Number(l.qty)||0)-rec);
+    const meter='<div class="lmeter'+(st==="Complete"?" done":"")+'"><span data-w="'+lp+'"></span></div>';
+    const admin = STATE.admin && STATE.state==="open"
+      ? '<td class="logcell"><input class="dlqty" type="text" inputmode="decimal" style="width:60px" placeholder="'+esc(remaining)+'"><input class="dlby" type="text" style="width:100px" placeholder="picked up by"><button class="btn small" data-deliver="'+t.issue+'|'+esc(l.line)+'">Log</button></td>'
+      : '';
+    return '<tr><td>'+esc(l.line)+'</td><td>'+esc(l.desc)+'</td><td>'+esc(l.uom)+'</td><td>'+esc(l.qty)+'</td><td>'+esc(rec)+meter+'</td><td class="'+statusClass(st)+'">'+st+'</td><td class="meta">'+hist+'</td>'+admin+'</tr>';
+  }).join("");
+  const adminHead = STATE.admin && STATE.state==="open" ? '<th>Log delivery</th>' : '';
+  return '<div class="trk" data-issue="'+t.issue+'">'+
+    '<div class="top" data-toggle="'+t.issue+'"><span class="req">'+esc(t.reqNumber)+'</span> <span class="badge">'+esc(t.trade)+'</span> '+
+      '<span class="meta">'+esc(t.project)+(t.description?(" · "+esc(t.description)):"")+'</span>'+
+      '<span class="prog"><span class="lines">'+t.linesComplete+'/'+t.linesTotal+' lines</span>'+ringSvg(pct)+'</span></div>'+
+    '<div class="detail"><div class="table-scroll"><table><thead><tr><th>Line</th><th>Description</th><th>UoM</th><th>Ordered</th><th>Received</th><th>Status</th><th>Deliveries</th>'+adminHead+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+      '<div style="margin-top:8px"><a class="btn small secondary" href="'+esc(t.url)+'" target="_blank" rel="noopener">Open issue</a></div></div></div>';
+}
+
+/* ---------- boot ---------- */
+function initTrades(){ const s=$("#reqTrade"), f=$("#fTrade");
+  TRADES.forEach(t=>{ const o=document.createElement("option");o.value=t;o.textContent=t;s.appendChild(o);
+    const o2=document.createElement("option");o2.value=t;o2.textContent=t;f.appendChild(o2); }); }
+function bind(){
+  $("#adminBtn").addEventListener("click", adminUnlock);
+  $("#newBtn").addEventListener("click", ()=>{ $("#newPanel").classList.add("show"); });
+  $("#cancelNew").addEventListener("click", ()=>{ $("#newPanel").classList.remove("show"); STATE.pendingParse=null; $("#reqFile").value=""; renderPreview(); });
+  $("#reqFile").addEventListener("change", async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    try{ toast("Reading file…"); STATE.pendingParse=await parseReqXlsx(f); renderPreview(); toast("Parsed "+STATE.pendingParse.lines.length+" lines"); }
+    catch(err){ STATE.pendingParse=null; renderPreview(); banner("Could not read file: "+err.message); }
+  });
+  $("#createBtn").addEventListener("click", async ()=>{
+    const p=buildReqPayload();
+    if(!p.reqNumber){ toast("Enter a Req #"); return; }
+    if(!TRADES.includes(p.trade)){ toast("Pick a trade"); return; }
+    if(!p.lines.length){ toast("No lines parsed"); return; }
+    toast("Creating…");
+    const res=await createTracker(p);
+    if(res.ok){
+      toast("Tracker created for "+p.reqNumber);
+      $("#newPanel").classList.remove("show"); STATE.pendingParse=null; $("#reqFile").value=""; renderPreview();
+      STATE.state="open"; $("#segActive").setAttribute("aria-selected","true"); $("#segDone").setAttribute("aria-selected","false");
+      if(res.tracker){ STATE.trackers.unshift(res.tracker); }  // show immediately (GET is cached ~60s)
+      render();
+    } else toast("Create failed: "+(res.error||""));
+  });
+  $("#q").addEventListener("input", render);
+  $("#fTrade").addEventListener("change", render);
+  $("#segActive").addEventListener("click", async ()=>{ STATE.state="open"; $("#segActive").setAttribute("aria-selected","true"); $("#segDone").setAttribute("aria-selected","false"); await loadTrackers(); render(); });
+  $("#segDone").addEventListener("click", async ()=>{ STATE.state="closed"; $("#segDone").setAttribute("aria-selected","true"); $("#segActive").setAttribute("aria-selected","false"); await loadTrackers(); render(); });
+  $("#list").addEventListener("click", async e=>{
+    const del=e.target.closest("[data-deliver]");
+    if(del){
+      const [issue,line]=del.getAttribute("data-deliver").split("|");
+      const row=del.closest("tr"), qtyEl=row.querySelector(".dlqty"), byEl=row.querySelector(".dlby");
+      let qty=qtyEl.value.trim() || qtyEl.getAttribute("placeholder");
+      if(!qty || Number(qty)===0){ toast("Enter a quantity"); return; }
+      const by=byEl.value.trim(); if(!by){ toast("Enter picked-up-by"); return; }
+      try{
+        toast("Logging…");
+        const res=await logDelivery(parseInt(issue,10), line, qty, by);
+        const idx=STATE.trackers.findIndex(t=>t.issue===parseInt(issue,10));
+        if(res.complete){ if(idx>=0) STATE.trackers.splice(idx,1); toast("Line logged — tracker complete"); render(); }
+        else { if(idx>=0 && res.tracker) STATE.trackers[idx]=res.tracker; toast("Delivery logged"); render();
+          const card=document.querySelector('.trk[data-issue="'+issue+'"]'); if(card) card.classList.add("open"); }
+      }catch(err){ toast("Failed: "+err.message); }
+      return;
+    }
+    const tog=e.target.closest("[data-toggle]");
+    if(tog){ tog.closest(".trk").classList.toggle("open"); }
+  });
+}
+async function init(){
+  initTrades(); bind();
+  STATE.adminName=localStorage.getItem("bac_admin_name")||"";
+  await loadTrackers();
+  render();
+}
+init();
+</script>
+</body>
+</html>
