@@ -359,7 +359,7 @@ const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<"
 const $ = s => document.querySelector(s);
 
 /* The Cloudflare Worker that gates admin writes (team-access management lives here). */
-const WORKER_URL = "https://asset-portal.site-asset-manager.workers.dev";
+const WORKER_URL = "https://1168-panhandle.site-asset-manager.workers.dev";
 const wbase = () => WORKER_URL.replace(/\/$/,"");
 
 /* Admin sign-in shares localStorage with inventory.html + deliveries.html (same origin). */
