@@ -1,0 +1,46 @@
+name: build-data
+
+# Rebuilds the per-site JSON whenever a new Equipment Master export is committed
+# to source/, then commits the generated data/ back to the repo.
+on:
+  push:
+    paths:
+      - "source/*.xlsx"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write        # used by the reconcile step (added in Phase 4)
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build per-site data from newest Equipment Master
+        run: |
+          export BUILD_TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          python -c "from build.build_data import build, newest_source; import json; print(json.dumps(build(newest_source('source'), 'data')))"
+
+      - name: Commit generated data
+        run: |
+          git config user.name "portal-bot"
+          git config user.email "portal-bot@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "No data changes."
+          else
+            git commit -m "chore(data): rebuild from $(ls source/*.xlsx | sort -V | tail -1)"
+            git push
+          fi
+
+      - name: Reconcile requests (auto-close satisfied reassignments)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python -m build.reconcile
