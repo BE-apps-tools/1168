@@ -278,7 +278,7 @@ function fmtUpdated(iso){
    Assets/status come from the static data/ files; open requests + active
    deliveries come from the repo's public GitHub Issues API (read-only, no
    token, CORS-enabled) — so no Worker call is needed here. */
-const GH_ISSUES = "https://api.github.com/repos/be-apps-tools/1127/issues?state=open&per_page=100";
+const GH_ISSUES = "https://api.github.com/repos/be-apps-tools/1168/issues?state=open&per_page=100";
 function labelsOf(it){ return (it.labels||[]).map(l => typeof l==="string" ? l : (l&&l.name)||""); }
 async function fetchOpenIssues(){
   const r = await fetch(GH_ISSUES, { headers:{ "Accept":"application/vnd.github+json" } });

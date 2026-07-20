@@ -499,7 +499,7 @@ async function makePublic(){
 }
 
 /* ---------- Trade assignment requests (read-only, from the public GitHub Issues API) ---------- */
-const GH_ISSUES = "https://api.github.com/repos/be-apps-tools/1127/issues?state=open&per_page=100";
+const GH_ISSUES = "https://api.github.com/repos/be-apps-tools/1168/issues?state=open&per_page=100";
 function labelsOf(it){ return (it.labels||[]).map(l => typeof l==="string" ? l : (l&&l.name)||""); }
 function parseMarker(body){ const m=/```json\s*({[\s\S]*?})\s*```/.exec(body||""); if(!m) return null; try{ return JSON.parse(m[1]); }catch(e){ return null; } }
 function field(body,label){ const m=new RegExp("\\*\\*"+label+":\\*\\*\\s*(.*)").exec(body||""); return m?m[1].trim():""; }
