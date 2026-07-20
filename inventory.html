@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="icon" href="data:,">
+<title>Asset Inventory Portal | Blattner</title>
+<style>
+  :root{
+    --dark-blue:#02568A; --energy-blue:#2DA2DB; --light-blue:#B9E5FB;
+    --bright-gray:#F2F2F2; --light-gray:#BCBCBC; --medium-gray:#76777B;
+    --dark-gray:#333333; --white:#FFFFFF; --black:#000000;
+    --r:14px; --r-sm:10px; --r-lg:20px;
+    --shadow:0 1px 4px #BCBCBC; --shadow-lift:0 10px 24px #BCBCBC;
+    --rail-w:88px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{overflow-x:hidden;}
+  body{font-family:Arial, Helvetica, sans-serif;color:var(--dark-gray);background:var(--bright-gray);
+    line-height:1.5;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;}
+  h1,h2,h3{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;color:var(--dark-blue);line-height:1.05;}
+  a{color:var(--energy-blue);}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+  @keyframes railIn{from{opacity:0;transform:translateX(-10px);}to{opacity:1;transform:none;}}
+
+  /* ---------- App shell ---------- */
+  .app-shell{display:flex;min-height:100vh;align-items:stretch;}
+  .nav-rail{flex:0 0 var(--rail-w);width:var(--rail-w);background:var(--dark-blue);color:var(--white);
+    display:flex;flex-direction:column;align-items:stretch;padding:16px 8px 14px;position:sticky;top:0;height:100vh;
+    animation:railIn .3s ease both;}
+  .rail-logo{display:block;width:46px;height:46px;margin:0 auto 22px;}
+  .rail-logo svg{width:100%;height:100%;display:block;}
+  .rail-item{display:block;text-align:center;color:var(--light-blue);text-decoration:none;padding:12px 4px;
+    border-radius:var(--r-sm);margin-bottom:6px;transition:background .18s ease,color .18s ease,transform .18s ease;}
+  .rail-item:hover{background:var(--energy-blue);color:var(--white);transform:translateY(-2px);}
+  .rail-item.active{background:var(--white);color:var(--dark-blue);}
+  .rail-ic{width:20px;height:20px;margin:0 auto 7px;position:relative;display:block;}
+  .ic-hub::before{content:"";position:absolute;left:0;top:0;width:8px;height:8px;border-radius:2px;background:currentColor;
+    box-shadow:12px 0 0 currentColor,0 12px 0 currentColor,12px 12px 0 currentColor;}
+  .ic-assets::before{content:"";position:absolute;left:0;top:2px;width:20px;height:3px;border-radius:2px;background:currentColor;
+    box-shadow:0 7px 0 currentColor,0 14px 0 currentColor;}
+  .ic-deliv::before{content:"";box-sizing:border-box;position:absolute;left:1px;top:1px;width:18px;height:18px;border:2px solid currentColor;border-radius:3px;}
+  .ic-deliv::after{content:"";box-sizing:border-box;position:absolute;left:6px;top:5px;width:6px;height:10px;border:2px solid currentColor;
+    border-top:none;border-left:none;transform:rotate(45deg);}
+  .ic-admin::before{content:"";box-sizing:border-box;position:absolute;left:5px;top:1px;width:10px;height:8px;border:2px solid currentColor;border-bottom:none;border-radius:5px 5px 0 0;}
+  .ic-admin::after{content:"";box-sizing:border-box;position:absolute;left:3px;top:8px;width:14px;height:11px;background:currentColor;border-radius:2px;}
+  .rail-lbl{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:9px;letter-spacing:0.04em;display:block;}
+  .rail-foot{margin-top:auto;text-align:center;font-family:'Arial Black', Arial, sans-serif;font-size:10px;
+    letter-spacing:0.12em;color:var(--energy-blue);padding-top:12px;}
+  .app-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{background:var(--dark-blue);color:var(--white);padding:18px 32px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .topbar .titles{min-width:0;}
+  .topbar h1{color:var(--white);font-size:20px;letter-spacing:0.01em;}
+  .topbar .sub{font-size:11px;text-transform:uppercase;letter-spacing:0.10em;color:var(--light-blue);font-weight:bold;margin-top:3px;}
+  .topbar .spacer{flex:1;}
+  .topbar .asof{display:none;align-items:center;gap:9px;flex:0 0 auto;border:1px solid var(--energy-blue);border-radius:999px;padding:7px 14px;}
+  .topbar .asof.show{display:inline-flex;}
+  .topbar .asof .dot{width:7px;height:7px;border-radius:50%;background:var(--energy-blue);flex:0 0 7px;}
+  .topbar .asof .lbl2{font-size:9px;text-transform:uppercase;letter-spacing:0.09em;color:var(--light-blue);font-weight:bold;}
+  .topbar .asof .val{font-size:11px;color:var(--white);font-weight:bold;}
+
+  /* Sub-bar: site selector */
+  .subbar{background:var(--white);border-bottom:1px solid var(--light-gray);padding:14px 32px;
+    display:flex;flex-wrap:wrap;gap:14px;align-items:center;}
+  .subbar label{font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:0.06em;color:var(--medium-gray);}
+  .subbar .who{font-size:11px;color:var(--medium-gray);font-weight:bold;text-transform:uppercase;letter-spacing:0.05em;}
+  .subbar .count{margin-left:auto;font-size:12px;color:var(--medium-gray);font-weight:bold;text-transform:uppercase;letter-spacing:0.05em;}
+
+  /* Banner */
+  .banner{display:none;padding:9px 20px;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:0.03em;text-align:center;}
+  .banner.info{background:var(--light-blue);color:var(--dark-blue);border-bottom:1px solid var(--energy-blue);}
+  .banner.err{background:var(--dark-blue);color:var(--white);border-bottom:3px solid var(--energy-blue);}
+
+  /* Tabs */
+  .tabs{display:flex;gap:8px;padding:16px 32px 0;flex-wrap:wrap;}
+  .tab{background:var(--white);border:1px solid var(--light-gray);border-radius:999px;
+    font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:12px;letter-spacing:0.04em;
+    color:var(--medium-gray);padding:10px 20px;cursor:pointer;transition:background .18s ease,color .18s ease,border-color .18s ease,transform .18s ease;}
+  .tab:hover{transform:translateY(-2px);border-color:var(--energy-blue);color:var(--dark-blue);}
+  .tab[aria-selected="true"]{background:var(--dark-blue);color:var(--white);border-color:var(--dark-blue);}
+
+  main{max-width:1400px;width:100%;margin:0 auto;padding:22px 32px 56px;}
+  .panel{display:none;}
+  .panel.active{display:block;animation:fadeUp .35s ease both;}
+
+  /* Stat strip */
+  .inv-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:22px;}
+  .inv-tile{background:var(--white);border:1px solid var(--light-gray);border-radius:var(--r);padding:16px 18px;
+    box-shadow:var(--shadow);display:flex;align-items:center;gap:14px;animation:fadeUp .45s ease both;}
+  .inv-tile .lbl{font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:0.09em;color:var(--medium-gray);}
+  .inv-tile .num{font-family:'Arial Black', Arial, sans-serif;color:var(--dark-blue);font-size:28px;line-height:1;margin:4px 0 8px;}
+  .inv-tile .grow{flex:1;min-width:0;}
+  .meter{height:6px;background:var(--bright-gray);border-radius:3px;overflow:hidden;}
+  .meter>span{display:block;height:100%;background:var(--energy-blue);border-radius:3px;width:0;transition:width .9s ease;}
+  .meter.blue>span{background:var(--dark-blue);} .meter.light>span{background:var(--light-blue);}
+
+  /* Progress ring (chart svg) */
+  .ring-wrap{position:relative;width:58px;height:58px;flex:0 0 58px;}
+  .ring-wrap .ring-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:'Arial Black', Arial, sans-serif;font-size:13px;color:var(--dark-blue);}
+  svg.chart.ring{width:58px;height:58px;display:block;}
+  .ring-fg{transition:stroke-dashoffset 1s ease;}
+
+  /* Toolbar */
+  .toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px;}
+  .toolbar .search{flex:1 1 220px;min-width:0;}
+  input[type=text],input[type=file],select,textarea{width:100%;font-family:Arial, Helvetica, sans-serif;font-size:16px;
+    color:var(--dark-gray);background:var(--white);border:1px solid var(--light-gray);border-radius:var(--r-sm);padding:11px 13px;
+    transition:border-color .15s ease,box-shadow .15s ease;}
+  select{flex:0 1 auto;min-width:150px;}
+  textarea{resize:vertical;min-height:80px;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--energy-blue);box-shadow:0 0 0 2px var(--light-blue);}
+
+  /* Table */
+  .table-scroll{overflow-x:auto;min-width:0;-webkit-overflow-scrolling:touch;border:1px solid var(--light-gray);
+    border-radius:var(--r);background:var(--white);box-shadow:var(--shadow);}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{background:var(--dark-blue);color:var(--white);font-family:'Arial Black', Arial, sans-serif;
+    text-transform:uppercase;font-size:10px;letter-spacing:0.06em;text-align:left;padding:12px 12px;white-space:nowrap;}
+  thead th:first-child{border-top-left-radius:var(--r);} thead th:last-child{border-top-right-radius:var(--r);}
+  tbody td{padding:10px 12px;border-bottom:1px solid var(--bright-gray);vertical-align:top;}
+  tr.asset-row{cursor:pointer;transition:background .12s ease;}
+  tr.asset-row:nth-child(4n+1){background:var(--bright-gray);}
+  tr.asset-row:hover{background:var(--light-blue);}
+  td.id{font-weight:bold;color:var(--dark-blue);white-space:nowrap;}
+  td.desc{min-width:170px;}
+  td.desc .d2{color:var(--medium-gray);font-size:11px;}
+  .trade-badge{display:inline-block;background:var(--bright-gray);border:1px solid var(--light-gray);color:var(--dark-blue);
+    border-radius:999px;font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:0.04em;padding:3px 10px;white-space:nowrap;}
+  .trade-badge.none{color:var(--medium-gray);}
+  .status-cell{white-space:nowrap;}
+  .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--medium-gray);vertical-align:middle;}
+  .status-dot.ok{background:var(--energy-blue);} .status-dot.warn{background:var(--dark-blue);} .status-dot.av{background:var(--light-blue);}
+  .btn{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:12px;letter-spacing:0.04em;
+    padding:11px 16px;border:1px solid var(--dark-blue);background:var(--dark-blue);color:var(--white);cursor:pointer;border-radius:var(--r-sm);
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;transition:background .18s ease,border-color .18s ease,transform .18s ease;}
+  .btn:hover{background:var(--energy-blue);border-color:var(--energy-blue);transform:translateY(-1px);}
+  .btn.small{font-size:11px;padding:8px 12px;min-height:36px;}
+  .btn.secondary{background:var(--white);color:var(--dark-blue);border-color:var(--light-gray);}
+  .btn.secondary:hover{background:var(--bright-gray);border-color:var(--dark-blue);}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+  tr.detail-row td{background:var(--bright-gray);}
+  .detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px 22px;}
+  .detail-grid div{font-size:12px;}
+  .detail-grid .k{color:var(--medium-gray);text-transform:uppercase;font-size:10px;letter-spacing:0.05em;font-weight:bold;}
+
+  /* Cards / request form */
+  .card{background:var(--white);border:1px solid var(--light-gray);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);}
+  .card-head{background:var(--dark-blue);padding:14px 20px;}
+  .card-head h2{color:var(--white);font-size:15px;}
+  .card-body{padding:20px;}
+  .ctx{background:var(--bright-gray);border-left:4px solid var(--energy-blue);border-radius:var(--r-sm);padding:14px 16px;margin-bottom:18px;}
+  .ctx .row{font-size:13px;margin-bottom:3px;}
+  .ctx .k{color:var(--medium-gray);text-transform:uppercase;font-size:10px;letter-spacing:0.05em;font-weight:bold;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:0.06em;color:var(--medium-gray);margin-bottom:6px;}
+  .field .req{color:var(--dark-blue);}
+  .hintbox{font-size:12px;color:var(--medium-gray);background:var(--bright-gray);border:1px solid var(--light-gray);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:12px;}
+  .empty{padding:48px 20px;text-align:center;color:var(--medium-gray);background:var(--white);border:1px solid var(--light-gray);border-radius:var(--r);box-shadow:var(--shadow);}
+  .empty .big{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;color:var(--light-gray);font-size:18px;margin-bottom:6px;}
+  .showing{margin-top:10px;font-size:11px;color:var(--medium-gray);}
+
+  /* My Requests */
+  .req-item{border:1px solid var(--light-gray);border-left:4px solid var(--energy-blue);border-radius:var(--r-sm);background:var(--white);padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow);}
+  .req-item .top{font-weight:bold;color:var(--dark-blue);font-size:13px;}
+  .req-item .meta{font-size:11px;color:var(--medium-gray);margin-top:3px;}
+
+  .pending-badge{display:inline-block;background:var(--dark-blue);color:var(--white);font-size:10px;font-weight:bold;
+    text-transform:uppercase;letter-spacing:0.04em;padding:4px 8px;border-radius:999px;text-decoration:none;white-space:nowrap;}
+  .pending-badge:hover{background:var(--energy-blue);}
+  .dup-block{display:none;background:var(--light-blue);border:1px solid var(--energy-blue);border-radius:var(--r-sm);color:var(--dark-blue);
+    font-size:12px;font-weight:bold;padding:10px 12px;margin-bottom:14px;}
+  .dup-block.show{display:block;}
+  .dup-block a{color:var(--dark-blue);}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--dark-blue);color:var(--white);
+    padding:12px 22px;font-weight:bold;font-size:13px;text-transform:uppercase;letter-spacing:0.04em;border-radius:var(--r-sm);
+    border-left:4px solid var(--energy-blue);display:none;z-index:60;max-width:90vw;text-align:center;box-shadow:var(--shadow-lift);}
+  .toast.show{display:block;}
+
+  @media (max-width:820px){
+    :root{--rail-w:100%;}
+    .app-shell{flex-direction:column;}
+    .nav-rail{flex-direction:row;height:auto;position:static;padding:8px;align-items:center;gap:6px;}
+    .rail-logo{margin:0 8px 0 4px;width:38px;height:38px;flex:0 0 38px;}
+    .rail-item{flex:1;margin-bottom:0;padding:8px 4px;}
+    .rail-ic{width:18px;height:18px;margin:0 auto 4px;}
+    .rail-foot{display:none;}
+  }
+  @media (max-width:640px){
+    .topbar{padding:14px 16px;} .subbar{padding:12px 16px;} .tabs{padding:14px 16px 0;} main{padding:16px 16px 44px;}
+    .topbar h1{font-size:17px;} .tab{padding:9px 14px;font-size:11px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="nav-rail" aria-label="Primary">
+    <a class="rail-logo" href="index.html" aria-label="Blattner"><svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 400 400" style="enable-background:new 0 0 400 400;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#FFFFFF;}
+</style>
+<g>
+	<polygon class="st0" points="215.2,164.1 231.7,122.3 195,122.3 	"/>
+	<path class="st0" d="M233.4,200l0.1,0.2c0,0,0-0.1,0.1-0.1L233.4,200z"/>
+	<path class="st0" d="M233.5,200.2l20.7,24.4c7.9-3.4,13.5-8.4,17.7-15.1l-38.4-9.5C233.6,200.1,233.5,200.2,233.5,200.2"/>
+	<path class="st0" d="M278.4,128.5l-38.3,42.9l-4.3,4.8l4.9-0.2l43.1-1.6l-45.3,13.9l0,0l-0.4,0.1l0.3,0.2h0l33.6,20.9
+		c4.2-6.6,7-14.8,9.5-24.9l2.7-11C289.4,152.7,289.2,136.7,278.4,128.5"/>
+	<polygon class="st0" points="202.5,163.7 195,122.3 167.4,122.3 	"/>
+	<path class="st0" d="M254.5,122.3h-22.8l-4.3,43.1l-0.2,1.7l2.1-1.6l49-37C273.1,124.5,265.4,122.3,254.5,122.3"/>
+	<path class="st0" d="M209.6,206.5H116l8.1-33h77.5l-43-50.7H83.8L31.8,334.1h168.4c30.3,0,55.3-9.6,66.4-56
+		c6.5-27.1,1.1-43.5-19.3-50.5l-22.9-27.1C220.8,204.7,215.8,206.5,209.6,206.5 M214.8,267.8c-3,12.3-11.4,15.5-22.9,15.5H97.2
+		l8.1-33h94.8C211.5,250.3,218.3,253.5,214.8,267.8"/>
+	<polygon class="st0" points="90.2,64.6 124.9,105.6 313.3,105.7 280.2,287.9 321.4,335.4 368.2,64.7 	"/>
+</g>
+</svg></a>
+    <a class="rail-item" href="index.html"><span class="rail-ic ic-hub"></span><span class="rail-lbl">Hub</span></a>
+    <a class="rail-item active" href="inventory.html"><span class="rail-ic ic-assets"></span><span class="rail-lbl">Assets</span></a>
+    <a class="rail-item" href="deliveries.html"><span class="rail-ic ic-deliv"></span><span class="rail-lbl">Deliveries</span></a>
+    <a class="rail-item" href="admin.html"><span class="rail-ic ic-admin"></span><span class="rail-lbl">Admin</span></a>
+    <div class="rail-foot">BEI</div>
+  </nav>
+
+  <div class="app-body">
+    <header class="topbar">
+      <div class="titles">
+        <h1>Asset Inventory Portal</h1>
+        <div class="sub">Blattner &middot; Equipment Master</div>
+      </div>
+      <div class="spacer"></div>
+      <div class="asof" id="asof"></div>
+    </header>
+
+    <div class="banner" id="banner"></div>
+
+    <div class="subbar">
+      <label for="siteSelect">Site</label>
+      <select id="siteSelect" style="min-width:240px;"><option value="">Select a site…</option></select>
+      <button class="btn secondary small" id="adminBtn" style="min-height:34px;">Admin</button>
+      <span class="who" id="adminWho" style="display:none;"></span>
+      <button class="btn small" id="importBtn" style="display:none;min-height:34px;">Import Equipment Master</button>
+      <span class="count" id="count"></span>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" id="tab-inv" role="tab" aria-selected="true" data-panel="inv">Inventory</button>
+      <button class="tab" id="tab-req" role="tab" aria-selected="false" data-panel="req">Request Change</button>
+      <button class="tab" id="tab-my" role="tab" aria-selected="false" data-panel="my">My Requests</button>
+    </div>
+
+    <main>
+      <!-- INVENTORY -->
+      <section class="panel active" id="panel-inv" role="tabpanel">
+        <div class="card" id="importPanel" style="display:none;margin-bottom:22px;">
+          <div class="card-head"><h2>Import Equipment Master</h2></div>
+          <div class="card-body">
+            <div class="hintbox">Upload the latest <strong>Equipment Master .xlsx</strong>. It is parsed entirely in your browser — the spreadsheet is never uploaded; only the built inventory JSON is published to the site.</div>
+            <div class="field"><label for="emFile">Equipment Master (.xlsx)</label>
+              <input type="file" id="emFile" accept=".xlsx"></div>
+            <div id="emPreview"></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+              <button class="btn" id="emPublish" disabled>Publish inventory</button>
+              <button class="btn secondary" id="emCancel">Cancel</button>
+            </div>
+          </div>
+        </div>
+        <section class="inv-stats" id="invStats" style="display:none;" aria-label="Site summary"></section>
+        <div class="toolbar">
+          <div class="search"><input type="text" id="q" aria-label="Search assets by unit or serial number, or description" placeholder="Search Unit # or Serial # or description…" autocomplete="off"></div>
+          <select id="fTrade"><option value="">All trades</option></select>
+          <select id="fStatus"><option value="">All statuses</option></select>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr>
+              <th>Unit #</th><th>Serial #</th><th>Description</th><th>Mfg / Yr</th>
+              <th>Status</th><th>Trade</th><th>Assigned</th><th></th>
+            </tr></thead>
+            <tbody id="invBody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="invEmpty" style="display:none;"></div>
+        <div class="showing" id="showing"></div>
+      </section>
+
+      <!-- REQUEST -->
+      <section class="panel" id="panel-req" role="tabpanel">
+        <div class="card">
+          <div class="card-head"><h2>Request Change / Reassignment</h2></div>
+          <div class="card-body">
+            <div id="reqNoAsset" class="empty"><div class="big">No asset selected</div>
+              <div>Open the Inventory tab and choose "Request" on an asset.</div></div>
+            <form id="reqForm" style="display:none;">
+              <div class="ctx">
+                <div class="row"><span class="k">Unit</span> <strong id="reqUnit"></strong></div>
+                <div class="row"><span class="k">Serial</span> <span id="reqSerial"></span></div>
+                <div class="row"><span class="k">Description</span> <span id="reqDesc"></span></div>
+                <div class="row"><span class="k">Current trade</span> <span id="reqCurTrade"></span> &middot;
+                  <span class="k">Status</span> <span id="reqCurStatus"></span> &middot;
+                  <span class="k">Site</span> <span id="reqSite"></span></div>
+              </div>
+              <div class="dup-block" id="reqDup"></div>
+              <div class="field">
+                <label for="reqType">Request type <span class="req">*</span></label>
+                <select id="reqType">
+                  <option value="reassign">Reassign Trade</option>
+                  <option value="issue">Report Issue</option>
+                </select>
+              </div>
+              <div class="field" id="reqTradeField">
+                <label for="reqTrade">Correct trade <span class="req">*</span></label>
+                <select id="reqTrade"></select>
+              </div>
+              <div class="hintbox" id="reqIssueHint" style="display:none;">
+                Describe the issue — e.g. "unit no longer onsite", "incorrect description",
+                "unit called off of inventory", damaged, wrong serial, etc.
+              </div>
+              <div class="field">
+                <label for="reqDetail">Detail / reason <span class="req">*</span></label>
+                <textarea id="reqDetail" placeholder="Explain the requested change…"></textarea>
+              </div>
+              <div class="field">
+                <label for="reqRequester">Your name <span class="req">*</span></label>
+                <input type="text" id="reqRequester" autocomplete="off" placeholder="e.g. R. Ruiz">
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button type="submit" class="btn" id="reqSubmit">Submit request</button>
+                <button type="button" class="btn secondary" id="reqCancel">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- MY REQUESTS -->
+      <section class="panel" id="panel-my" role="tabpanel">
+        <div id="myEmpty" class="empty"><div class="big">No requests yet</div>
+          <div>Requests you submit from this device appear here.</div></div>
+        <div id="myList"></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* Canonical trades (spec §6) — reassignment target list + inventory filter. */
+const TRADES = ["Civil","Electrical","Foundation","Collection","Install","Mechanical",
+  "Commissioning","Substation","BESS","Safety","SM/PCC","Survey","Quality","TLine","Inventory","Decom","Other"];
+
+/* ============================================================
+   CONFIG — set these two after deploying the Cloudflare Worker
+   (see worker/SETUP.md). SUBMIT_KEY is a spam deterrent, not a
+   secret; the real secret (GitHub token) lives only in the Worker.
+   ============================================================ */
+let WORKER_URL = "https://asset-portal.site-asset-manager.workers.dev";
+let SUBMIT_KEY = "access123!";   // spam deterrent; matches the Worker's SUBMIT_KEY var
+
+const STATE = { site:"", assets:[], meta:null, siteIndex:[], admin:false, adminName:"", pendingInventory:null };
+let REQ_TARGET = null;
+let OPEN_REQ = {};                    // "unit|serial" -> [ {issue,url,type,requestedTrade} ]
+const rkey = (u,s) => u + "|" + s;
+const wbase = () => WORKER_URL.replace(/\/$/, "");
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+
+/* Last-updated pill (date + time from the build's ISO timestamp). */
+function fmtUpdated(iso){
+  if(!iso) return "";
+  const date=iso.slice(0,10), time=iso.slice(11,16);
+  return '<span class="dot"></span><span><span class="lbl2">Last updated</span><br>' +
+    '<span class="val">' + esc(date) + (time?(' &middot; ' + esc(time) + ' UTC'):'') + '</span></span>';
+}
+
+/* ---------- storage / cache ---------- */
+function cacheSet(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function cacheGet(k){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){ return null; } }
+
+/* ---------- toast + banner ---------- */
+let toastT=null;
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),3000); }
+function banner(kind,msg){ const b=$("#banner"); if(!kind){ b.style.display="none"; return; } b.className="banner "+kind; b.textContent=msg; b.style.display="block"; }
+
+/* ---------- data loading ---------- */
+async function loadMeta(){
+  try{ const r=await fetch("data/meta.json"); if(!r.ok) throw 0; const m=await r.json(); cacheSet("bac_portal_meta",m); return m; }
+  catch(e){ return cacheGet("bac_portal_meta"); }
+}
+async function loadSiteIndex(){
+  try{ const r=await fetch("data/sites.json"); if(!r.ok) throw 0; const s=await r.json(); cacheSet("bac_portal_sites",s); return s; }
+  catch(e){ return cacheGet("bac_portal_sites") || []; }
+}
+async function loadSite(code){
+  try{
+    const r=await fetch("data/sites/"+encodeURIComponent(code)+".json"); if(!r.ok) throw 0;
+    const a=await r.json(); cacheSet("bac_portal_site_"+code,a); banner(null); return a;
+  }catch(e){
+    const c=cacheGet("bac_portal_site_"+code);
+    if(c){ banner("info","Offline — showing cached data for this site"); return c; }
+    banner("err","Could not load site data and no cached copy is available.");
+    return [];
+  }
+}
+
+/* ---------- site summary tiles ---------- */
+function ringSvg(pct){
+  const C=125.66, off=(C*(1-Math.max(0,Math.min(100,pct))/100)).toFixed(1);
+  return '<div class="ring-wrap"><svg class="chart ring" viewBox="0 0 48 48" aria-hidden="true">'+
+    '<circle cx="24" cy="24" r="20" fill="none" stroke="#B9E5FB" stroke-width="5"></circle>'+
+    '<circle class="ring-fg" cx="24" cy="24" r="20" fill="none" stroke="#2DA2DB" stroke-width="5" stroke-linecap="round" '+
+      'stroke-dasharray="125.66" stroke-dashoffset="125.66" transform="rotate(-90 24 24)"></circle>'+
+    '</svg><div class="ring-val">'+pct+'%</div></div>';
+}
+function renderStats(){
+  const box=$("#invStats");
+  if(!STATE.assets.length){ box.style.display="none"; box.innerHTML=""; return; }
+  const n=STATE.assets.length;
+  const st=s=>String(s||"");
+  const working=STATE.assets.filter(a=>st(a.status).startsWith("WK")).length;
+  const available=STATE.assets.filter(a=>{const s=st(a.status);return s.startsWith("AV")||s.startsWith("AC");}).length;
+  const attention=n-working-available;
+  const unassigned=STATE.assets.filter(a=>!st(a.trade)).length;
+  const pct=n?Math.round(100*working/n):0;
+  const pctW=v=>Math.round(100*v/n);
+  box.style.display="grid";
+  box.innerHTML=
+    '<div class="inv-tile" style="animation-delay:0s">'+ringSvg(pct)+
+      '<div class="grow"><div class="lbl">Working</div><div class="num">'+working+'</div>'+
+      '<div class="meter"><span></span></div></div></div>'+
+    '<div class="inv-tile" style="animation-delay:.05s"><div class="grow"><div class="lbl">Available</div><div class="num">'+available+'</div>'+
+      '<div class="meter light"><span></span></div></div></div>'+
+    '<div class="inv-tile" style="animation-delay:.1s"><div class="grow"><div class="lbl">Needs attention</div><div class="num">'+attention+'</div>'+
+      '<div class="meter blue"><span></span></div></div></div>'+
+    '<div class="inv-tile" style="animation-delay:.15s"><div class="grow"><div class="lbl">Unassigned trade</div><div class="num">'+unassigned+'</div>'+
+      '<div class="meter blue"><span></span></div></div></div>';
+  // animate meters/ring on next frame
+  const widths=[pct, pctW(available), pctW(attention), pctW(unassigned)];
+  requestAnimationFrame(()=>{
+    box.querySelectorAll(".meter>span").forEach((el,i)=>{ el.style.width=widths[i]+"%"; });
+    const fg=box.querySelector(".ring-fg"); if(fg){ fg.style.strokeDashoffset=(125.66*(1-pct/100)).toFixed(1); }
+  });
+}
+
+/* ---------- inventory ---------- */
+function viewAssets(){
+  const q=$("#q").value.trim().toLowerCase();
+  const tf=$("#fTrade").value, sf=$("#fStatus").value;
+  let v=STATE.assets.slice();
+  if(tf) v=v.filter(a=>a.trade===tf);
+  if(sf) v=v.filter(a=>a.status===sf);
+  if(q) v=v.filter(a=>[a.unit,a.serial,a.description,a.description2].some(x=>String(x||"").toLowerCase().includes(q)));
+  v.sort((a,b)=>String(a.unit).localeCompare(String(b.unit)));
+  return v;
+}
+function statusDot(status){
+  const s=String(status||"");
+  if(s.startsWith("WK")) return '<span class="status-dot ok"></span>';
+  if(s.startsWith("AV")||s.startsWith("AC")) return '<span class="status-dot av"></span>';
+  if(!s) return '<span class="status-dot"></span>';
+  return '<span class="status-dot warn"></span>';
+}
+function renderInventory(){
+  const body=$("#invBody"); body.innerHTML="";
+  const v=viewAssets();
+  $("#invEmpty").style.display = STATE.assets.length? "none":"block";
+  if(STATE.assets.length===0){ $("#invEmpty").innerHTML='<div class="big">No site selected</div><div>Choose a site above to view its equipment.</div>'; }
+  else if(v.length===0){ $("#invEmpty").style.display="block"; $("#invEmpty").innerHTML='<div class="big">No matches</div><div>Adjust your search or filters.</div>'; }
+  const CAP=400;
+  const shown=v.slice(0,CAP);
+  shown.forEach((a,i)=>{
+    const tr=document.createElement("tr"); tr.className="asset-row";
+    const pend=(OPEN_REQ[rkey(a.unit,a.serial)]||[]);
+    const pendBadge = pend.length ? '<a class="pending-badge" href="'+esc(pend[0].url)+'" target="_blank" rel="noopener">Pending #'+esc(pend[0].issue)+'</a> ' : '';
+    tr.innerHTML=
+      '<td class="id">'+esc(a.unit)+'</td>'+
+      '<td>'+esc(a.serial)+'</td>'+
+      '<td class="desc">'+esc(a.description)+(a.description2?'<div class="d2">'+esc(a.description2)+'</div>':'')+'</td>'+
+      '<td>'+esc(a.mfg)+(a.modelYear?' / '+esc(a.modelYear):'')+'</td>'+
+      '<td class="status-cell">'+statusDot(a.status)+esc(a.status)+'</td>'+
+      '<td>'+(a.trade?'<span class="trade-badge">'+esc(a.trade)+'</span>':'<span class="trade-badge none">Unassigned</span>')+'</td>'+
+      '<td>'+esc(a.assignedEmployee==="0"?"":a.assignedEmployee)+'</td>'+
+      '<td><div class="row-actions">'+pendBadge+'<button class="btn small" data-req-unit="'+esc(a.unit)+'" data-req-serial="'+esc(a.serial)+'">Request</button></div></td>';
+    const detail=document.createElement("tr"); detail.className="detail-row"; detail.style.display="none";
+    detail.innerHTML='<td colspan="8"><div class="detail-grid">'+
+      dt("Company",a.company)+dt("Location",a.location)+dt("Location code",a.locationCode)+
+      dt("Transfer #",a.transferNumber)+dt("Finance",a.financeMethod)+dt("Asset #",a.assetNumber)+
+      dt("From date",a.fromDate)+dt("Acquired",a.acquiredDate)+dt("Additional info",a.additionalInfo)+dt("Remarks",a.remarks)+
+      '</div></td>';
+    tr.addEventListener("click",e=>{ if(e.target.closest("[data-req-unit]")) return;
+      detail.style.display = detail.style.display==="none"?"":"none"; });
+    body.appendChild(tr); body.appendChild(detail);
+  });
+  $("#showing").textContent = STATE.assets.length
+    ? ("Showing " + shown.length + " of " + v.length + " matches"
+        + (v.length > CAP ? " — refine your search to narrow this list" : "")
+        + " · " + STATE.assets.length + " total at site")
+    : "";
+}
+function dt(k,val){ return '<div><span class="k">'+esc(k)+'</span><br>'+(val&&val!=="0"?esc(val):"&mdash;")+'</div>'; }
+
+function fillStatusFilter(){
+  const sel=$("#fStatus"); sel.innerHTML='<option value="">All statuses</option>';
+  [...new Set(STATE.assets.map(a=>a.status).filter(Boolean))].sort().forEach(s=>{
+    const o=document.createElement("option"); o.value=s; o.textContent=s; sel.appendChild(o); });
+}
+
+/* ---------- request flow ---------- */
+function openRequestFor(unit,serial){
+  const a=STATE.assets.find(x=>x.unit===unit&&x.serial===serial); if(!a) return;
+  REQ_TARGET=a;
+  $("#reqNoAsset").style.display="none"; $("#reqForm").style.display="block";
+  $("#reqUnit").textContent=a.unit; $("#reqSerial").textContent=a.serial;
+  $("#reqDesc").textContent=a.description+(a.description2?" — "+a.description2:"");
+  $("#reqCurTrade").textContent=a.trade||"(none)"; $("#reqCurStatus").textContent=a.status; $("#reqSite").textContent=STATE.site;
+  $("#reqType").value="reassign"; syncReqType();
+  $("#reqTrade").value=""; $("#reqDetail").value="";
+  $("#reqRequester").value = cacheGet("bac_portal_requester")||"";
+  switchTab("req"); $("#reqType").focus();
+}
+function syncReqType(){
+  const t=$("#reqType").value;
+  $("#reqTradeField").style.display = t==="reassign"?"block":"none";
+  $("#reqIssueHint").style.display = t==="issue"?"block":"none";
+  checkDup();
+}
+/* Block a duplicate request when one of the same type is already open. */
+function checkDup(){
+  const a=REQ_TARGET, block=$("#reqDup"), btn=$("#reqSubmit");
+  if(!a){ block.classList.remove("show"); btn.disabled=false; return; }
+  const t=$("#reqType").value;
+  const dup=(OPEN_REQ[rkey(a.unit,a.serial)]||[]).find(q=>q.type===t);
+  if(dup){
+    block.innerHTML = 'A '+(t==="reassign"?"reassignment":"report")+' request is already open for this unit '+
+      '(<a href="'+esc(dup.url)+'" target="_blank" rel="noopener">#'+esc(dup.issue)+'</a>). No need to submit another.';
+    block.classList.add("show"); btn.disabled=true;
+  } else {
+    block.classList.remove("show"); btn.disabled=false;
+  }
+}
+function buildRequestPayload(){
+  const a=REQ_TARGET;
+  return { type:$("#reqType").value, site:STATE.site, unit:a.unit, serial:a.serial,
+    description:a.description, currentTrade:a.trade||"",
+    requestedTrade: $("#reqType").value==="reassign"?$("#reqTrade").value:"",
+    detail:$("#reqDetail").value.trim(), requester:$("#reqRequester").value.trim() };
+}
+function logRequest(entry){
+  const log=cacheGet("bac_portal_requests")||[]; log.unshift(entry); cacheSet("bac_portal_requests",log);
+}
+async function submitRequest(p){
+  // Pre-deploy / dev: no Worker configured -> keep a local-only log.
+  if(!WORKER_URL){
+    logRequest(Object.assign({},p,{issueNumber:0,url:"#(local)",at:new Date().toISOString()}));
+    return {ok:true, local:true};
+  }
+  try{
+    const r=await fetch(wbase()+"/requests",{method:"POST",
+      headers:{"Content-Type":"application/json","x-submit-key":SUBMIT_KEY}, body:JSON.stringify(p)});
+    if(!r.ok) throw new Error("server "+r.status);
+    const d=await r.json();
+    logRequest(Object.assign({},p,{issueNumber:d.issueNumber,url:d.url,at:new Date().toISOString()}));
+    return {ok:true, issueNumber:d.issueNumber, url:d.url};
+  }catch(err){
+    const q=cacheGet("bac_portal_queue")||[]; q.push(Object.assign({},p,{at:new Date().toISOString()})); cacheSet("bac_portal_queue",q);
+    return {ok:false, queued:true};
+  }
+}
+async function flushQueue(){
+  if(!WORKER_URL) return;
+  const q=cacheGet("bac_portal_queue")||[]; if(!q.length) return;
+  const remain=[];
+  for(const p of q){
+    try{
+      const r=await fetch(wbase()+"/requests",{method:"POST",
+        headers:{"Content-Type":"application/json","x-submit-key":SUBMIT_KEY}, body:JSON.stringify(p)});
+      if(!r.ok) throw 0;
+      const d=await r.json();
+      logRequest(Object.assign({},p,{issueNumber:d.issueNumber,url:d.url}));
+    }catch(e){ remain.push(p); }
+  }
+  cacheSet("bac_portal_queue",remain);
+  if(remain.length!==q.length) renderMyRequests();
+}
+/* Pending-request overlay (from the Worker's cached GET /requests). */
+async function loadOpenRequests(code){
+  OPEN_REQ={};
+  if(!WORKER_URL) return;
+  try{
+    const r=await fetch(wbase()+"/requests?site="+encodeURIComponent(code));
+    if(!r.ok) return;
+    const data=await r.json();
+    (data.requests||[]).forEach(q=>{ const k=rkey(q.unit,q.serial); (OPEN_REQ[k]=OPEN_REQ[k]||[]).push(q); });
+  }catch(e){ /* non-fatal: no badges */ }
+}
+function renderMyRequests(){
+  const log=cacheGet("bac_portal_requests")||[];
+  $("#myEmpty").style.display = log.length?"none":"block";
+  $("#myList").innerHTML = log.map(r=>{
+    const label = r.type==="reassign" ? ("Reassign → "+esc(r.requestedTrade)) : "Report issue";
+    return '<div class="req-item"><div class="top">'+label+' — Unit '+esc(r.unit)+' (SN '+esc(r.serial)+')</div>'+
+      '<div class="meta">'+esc(r.detail)+' · by '+esc(r.requester)+' · '+esc((r.at||"").slice(0,16).replace("T"," "))+
+      (r.issueNumber?(' · issue #'+r.issueNumber):' · (pending send)')+'</div></div>';
+  }).join("");
+}
+
+/* ---------- tabs ---------- */
+function switchTab(name){
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected", b.dataset.panel===name?"true":"false"));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active", p.id==="panel-"+name));
+  if(name==="my") renderMyRequests();
+}
+
+/* ==========================================================================
+   ADMIN + Equipment Master browser import
+   The .xlsx is parsed here (never uploaded); the built JSON is published via
+   the Worker (POST /inventory, ADMIN_KEY). Mirrors build/build_data.py +
+   build/normalize.py so the output matches the Action-built data exactly.
+   ========================================================================== */
+function adminKey(){ return localStorage.getItem("bac_admin_key")||""; }
+function setAdmin(on){
+  STATE.admin=on;
+  $("#adminBtn").style.display=on?"none":"inline-flex";
+  $("#adminWho").style.display=on?"inline":"none";
+  $("#importBtn").style.display=on?"inline-flex":"none";
+  $("#adminWho").textContent=on?("Admin: "+STATE.adminName):"";
+  if(!on){ $("#importPanel").style.display="none"; }
+}
+function adminUnlock(){
+  const name=prompt("Your name (shown on updates):"); if(name===null) return;
+  const key=prompt("Admin key:"); if(key===null) return;
+  STATE.adminName=name.trim()||"admin";
+  localStorage.setItem("bac_admin_name", STATE.adminName);
+  localStorage.setItem("bac_admin_key", key.trim());
+  setAdmin(true); toast("Admin unlocked");
+}
+
+/* ---------- dependency-free xlsx reader (native DecompressionStream) ---------- */
+function emDecodeXml(s){ return String(s).replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&#39;/g,"'"); }
+function emColIndex(ref){ const m=/^([A-Z]+)/.exec(ref); let n=0; for(const ch of m[1]) n=n*26+(ch.charCodeAt(0)-64); return n-1; }
+function emExcelSerialToISO(v){
+  const s=String(v==null?"":v).trim(); if(!s) return "";
+  const n=Math.trunc(Number(s)); if(!isFinite(n)||n<=0) return "";
+  const d=new Date(Date.UTC(1899,11,30)+n*86400000);
+  return isNaN(d)?"":d.toISOString().slice(0,10);
+}
+function emReadXlsx(buf){
+  const dv=new DataView(buf), u8=new Uint8Array(buf), dec=new TextDecoder();
+  let eocd=-1;
+  for(let i=buf.byteLength-22;i>=0;i--){ if(dv.getUint32(i,true)===0x06054b50){ eocd=i; break; } }
+  if(eocd<0) throw new Error("Not a valid .xlsx (no zip end record)");
+  const cdOff=dv.getUint32(eocd+16,true), cdCount=dv.getUint16(eocd+10,true);
+  const entries={}; let p=cdOff;
+  for(let n=0;n<cdCount;n++){
+    if(dv.getUint32(p,true)!==0x02014b50) break;
+    const method=dv.getUint16(p+10,true), compSize=dv.getUint32(p+20,true);
+    const nameLen=dv.getUint16(p+28,true), extraLen=dv.getUint16(p+30,true), cmtLen=dv.getUint16(p+32,true);
+    const localOff=dv.getUint32(p+42,true);
+    const name=dec.decode(u8.subarray(p+46,p+46+nameLen));
+    entries[name]={method,compSize,localOff}; p+=46+nameLen+extraLen+cmtLen;
+  }
+  async function get(name){
+    const e=entries[name]; if(!e) return null;
+    const lNameLen=dv.getUint16(e.localOff+26,true), lExtraLen=dv.getUint16(e.localOff+28,true);
+    const start=e.localOff+30+lNameLen+lExtraLen;
+    const comp=u8.subarray(start,start+e.compSize);
+    if(e.method===0) return dec.decode(comp);
+    if(e.method===8){
+      if(typeof DecompressionStream==="undefined") throw new Error("This browser can't read .xlsx (no DecompressionStream) — use Chrome/Edge or recent Safari.");
+      const ab=await new Response(new Blob([comp]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer();
+      return dec.decode(new Uint8Array(ab));
+    }
+    throw new Error("Unsupported compression in .xlsx (method "+e.method+")");
+  }
+  return { get };
+}
+function emParseShared(xml){
+  if(!xml) return []; const out=[];
+  for(const m of xml.matchAll(/<si>([\s\S]*?)<\/si>/g)){
+    let t=""; for(const tm of m[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)) t+=tm[1];
+    out.push(emDecodeXml(t));
+  }
+  return out;
+}
+function emSheetRows(xml, shared){
+  const rows=[];
+  for(const rm of xml.matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)){
+    const cells={}; let maxc=0;
+    for(const cm of rm[1].matchAll(/<c\s+r="([A-Z]+\d+)"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)){
+      const ref=cm[1], attrs=cm[2]||"", inner=cm[3]||"";
+      const ci=emColIndex(ref); if(ci>maxc) maxc=ci;
+      const tm=/t="([^"]+)"/.exec(attrs); const ty=tm?tm[1]:""; let val="";
+      if(ty==="inlineStr"){ const im=/<t[^>]*>([\s\S]*?)<\/t>/.exec(inner); val=im?emDecodeXml(im[1]):""; }
+      else { const vm=/<v>([\s\S]*?)<\/v>/.exec(inner); if(vm){ val = ty==="s" ? (shared[parseInt(vm[1],10)]||"") : emDecodeXml(vm[1]); } }
+      cells[ci]=val;
+    }
+    const arr=[]; for(let i=0;i<=maxc;i++) arr.push(cells[i]!==undefined?cells[i]:"");
+    rows.push(arr);
+  }
+  return rows;
+}
+async function emFirstSheetRows(file){
+  const zip=emReadXlsx(await file.arrayBuffer());
+  const wb=await zip.get("xl/workbook.xml");
+  const rels=await zip.get("xl/_rels/workbook.xml.rels");
+  const shared=emParseShared(await zip.get("xl/sharedStrings.xml"));
+  const relMap={};
+  for(const m of rels.matchAll(/<Relationship\s+[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"/g)) relMap[m[1]]=m[2];
+  const sm=/<sheet\s+[^>]*r:id="([^"]+)"/.exec(wb) || /<sheet\s+[^>]*name="[^"]*"[^>]*r:id="([^"]+)"/.exec(wb);
+  if(!sm) throw new Error("No sheet found in workbook");
+  let t=relMap[sm[1]]||""; if(t && !t.startsWith("xl/")) t="xl/"+t;
+  return emSheetRows(await zip.get(t)||"", shared);
+}
+
+/* ---------- port of build/normalize.py + build/build_data.py ---------- */
+const EM_HEADER_TO_FIELD = {
+  "Unit Number":"unit","Description":"description","Description 2":"description2",
+  "Serial Number":"serial","Mfg":"mfg","Mdl Yr":"modelYear",
+  "Additional Information":"additionalInfo","Equipment Status":"status",
+  "Branch/Plant":"branchPlant","From Date":"fromDate","Transfer Number":"transferNumber",
+  "Additional Remarks":"remarks","Assigned Employee":"assignedEmployee",
+  "Acquired Date":"acquiredDate","Company":"company","Location":"location",
+  "Trade":"trade","Location Code":"locationCode","Finance Method":"financeMethod",
+  "Asset Number":"assetNumber",
+};
+const EM_TRADE_VARIANTS = {
+  "CIVIL":"Civil","ELECTRIC":"Electrical","ELEC":"Electrical","ELECTRI":"Electrical",
+  "ELETRIC":"Electrical","ELECT":"Electrical","ELECTRICAL":"Electrical",
+  "FOUNDAT":"Foundation","FOUNDATION":"Foundation","COLLECT":"Collection","COLLECTI":"Collection",
+  "COLLECTION":"Collection","INSTALL":"Install","MECHANIC":"Mechanical","MECHANICAL":"Mechanical",
+  "COMMISSG":"Commissioning","COMMISSI":"Commissioning","COMMISSIONING":"Commissioning",
+  "SUBSTATN":"Substation","SUBSTATI":"Substation","SUBSTATION":"Substation",
+  "BESS":"BESS","SAFETY":"Safety","SM/PCC":"SM/PCC","SURVEY":"Survey","QUALITY":"Quality",
+  "TLINE":"TLine","INVENTRY":"Inventory","INVENTORY":"Inventory","DECOM":"Decom","LOWER YD":"Other",
+};
+function emCanonicalTrade(raw){ const s=(raw||"").trim(); if(!s) return ""; return EM_TRADE_VARIANTS[s.toUpperCase()]||"Other"; }
+function emSplitBranch(bp){ const s=(bp||"").trim(); const i=s.indexOf(" - "); if(i>=0) return [s.slice(0,i).trim(), s.slice(i+3).trim()]; return s?[s,""]:["",""]; }
+function emSanitizeCode(code){ return String(code||"").replace(/[^A-Za-z0-9_-]+/g,"_") || "UNASSIGNED"; }
+function emNormHeader(s){ return String(s||"").replace(/\s+/g," ").trim(); }
+function buildInventory(rows, fileName){
+  if(!rows.length) throw new Error("Sheet is empty");
+  const header=rows[0].map(emNormHeader);
+  if(!header.includes("Unit Number") && !header.includes("Serial Number"))
+    throw new Error("This doesn't look like an Equipment Master export (no 'Unit Number'/'Serial Number' header). Header found: "+header.filter(Boolean).slice(0,8).join(", "));
+  const sites={}; let count=0;
+  for(let r=1;r<rows.length;r++){
+    const arr=rows[r]; const rec={};
+    header.forEach((h,i)=>{ const f=EM_HEADER_TO_FIELD[h]; if(f) rec[f]=arr[i]!==undefined?arr[i]:""; });
+    const unit=String(rec.unit||"").trim(), serial=String(rec.serial||"").trim();
+    if(!unit && !serial) continue;
+    const rawTrade=String(rec.trade||"").trim();
+    let [codeRaw,name]=emSplitBranch(rec.branchPlant||"");
+    const code=emSanitizeCode(codeRaw);
+    if(!name && code==="UNASSIGNED") name="Unassigned / No Branch";
+    const g=k=>String(rec[k]||"").trim();
+    const asset={ unit, serial, description:g("description"), description2:g("description2"),
+      mfg:g("mfg"), modelYear:g("modelYear"), status:g("status"),
+      trade:emCanonicalTrade(rawTrade), tradeRaw:rawTrade, assignedEmployee:g("assignedEmployee"),
+      location:g("location"), locationCode:g("locationCode"), additionalInfo:g("additionalInfo"),
+      remarks:g("remarks"), company:g("company"), transferNumber:g("transferNumber"),
+      financeMethod:g("financeMethod"), assetNumber:g("assetNumber"),
+      fromDate:emExcelSerialToISO(rec.fromDate||""), acquiredDate:emExcelSerialToISO(rec.acquiredDate||"") };
+    const site=sites[code]||(sites[code]={name,assets:[]}); if(name && !site.name) site.name=name;
+    site.assets.push(asset); count++;
+  }
+  const codes=Object.keys(sites);
+  if(!count) throw new Error("No asset rows found (every row was missing Unit # and Serial #).");
+  const index=codes.map(code=>({code, name:sites[code].name||code, count:sites[code].assets.length}));
+  index.sort((a,b)=>(a.name||a.code).toLowerCase().localeCompare((b.name||b.code).toLowerCase()));
+  const vm=/V\d+\.\d+/.exec(fileName||"");
+  const meta={ builtAt:new Date().toISOString().slice(0,19)+"Z", sourceVersion:vm?vm[0]:"", assetCount:count, siteCount:index.length };
+  const siteData={}; codes.forEach(code=>siteData[code]=sites[code].assets);
+  return { meta, index, siteData };
+}
+
+/* ---------- import UI ---------- */
+function renderEmPreview(){
+  const inv=STATE.pendingInventory, el=$("#emPreview");
+  if(!inv){ el.innerHTML=""; $("#emPublish").disabled=true; return; }
+  const rows=inv.index.slice().sort((a,b)=>b.count-a.count)
+    .map(s=>'<tr><td>'+esc(s.name)+'</td><td>'+esc(s.code)+'</td><td>'+s.count+'</td></tr>').join("");
+  el.innerHTML='<div class="field"><label>Parsed '+inv.meta.assetCount+' assets across '+inv.index.length+' site(s)'+
+    (inv.meta.sourceVersion?(' &middot; '+esc(inv.meta.sourceVersion)):'')+'</label></div>'+
+    '<div class="table-scroll"><table><thead><tr><th>Site</th><th>Code</th><th>Assets</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  $("#emPublish").disabled = inv.meta.assetCount===0;
+}
+async function publishInventory(){
+  const inv=STATE.pendingInventory; if(!inv) return;
+  $("#emPublish").disabled=true; toast("Publishing…");
+  try{
+    const r=await fetch(wbase()+"/inventory",{method:"POST",
+      headers:{"Content-Type":"application/json","x-admin-key":adminKey()}, body:JSON.stringify(inv)});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){ toast("Publish failed: "+(d.error||("HTTP "+r.status))); $("#emPublish").disabled=false; return; }
+    toast("Published "+inv.meta.assetCount+" assets — live in ~1–2 min");
+    banner("info","Inventory published ("+inv.meta.assetCount+" assets, "+inv.index.length+" sites). GitHub Pages rebuilds in ~1–2 minutes; refresh then.");
+    STATE.pendingInventory=null; $("#emFile").value=""; renderEmPreview(); $("#importPanel").style.display="none";
+  }catch(err){ toast("Publish failed: "+err.message); $("#emPublish").disabled=false; }
+}
+
+/* ---------- boot ---------- */
+function fillTradeControls(){
+  const f=$("#fTrade"), r=$("#reqTrade");
+  TRADES.forEach(t=>{ const o=document.createElement("option"); o.value=t; o.textContent=t; f.appendChild(o);
+    const o2=document.createElement("option"); o2.value=t; o2.textContent=t; r.appendChild(o2); });
+}
+function bind(){
+  document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.panel)));
+  $("#adminBtn").addEventListener("click", adminUnlock);
+  $("#importBtn").addEventListener("click", ()=>{ const p=$("#importPanel"); p.style.display = p.style.display==="none"?"block":"none"; });
+  $("#emCancel").addEventListener("click", ()=>{ $("#importPanel").style.display="none"; STATE.pendingInventory=null; $("#emFile").value=""; renderEmPreview(); });
+  $("#emFile").addEventListener("change", async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    try{ toast("Reading file…"); const rows=await emFirstSheetRows(f); STATE.pendingInventory=buildInventory(rows, f.name); renderEmPreview(); toast("Parsed "+STATE.pendingInventory.meta.assetCount+" assets"); }
+    catch(err){ STATE.pendingInventory=null; renderEmPreview(); banner("err","Could not read file: "+err.message); }
+  });
+  $("#emPublish").addEventListener("click", publishInventory);
+  $("#siteSelect").addEventListener("change", async e=>{
+    const code=e.target.value; STATE.site=code;
+    if(!code){ STATE.assets=[]; OPEN_REQ={}; renderStats(); renderInventory(); $("#count").textContent=""; return; }
+    $("#count").textContent = "Loading…";
+    $("#invEmpty").style.display = "block";
+    $("#invEmpty").innerHTML = '<div class="big">Loading…</div><div>Fetching inventory for this site.</div>';
+    STATE.assets = await loadSite(code);
+    await loadOpenRequests(code);
+    fillStatusFilter(); renderStats(); renderInventory();
+    $("#count").textContent = STATE.assets.length+" assets";
+  });
+  let qTimer=null;
+  $("#q").addEventListener("input", ()=>{ clearTimeout(qTimer); qTimer=setTimeout(renderInventory, 180); });
+  $("#fTrade").addEventListener("change", renderInventory);
+  $("#fStatus").addEventListener("change", renderInventory);
+  $("#invBody").addEventListener("click", e=>{
+    const b=e.target.closest("[data-req-unit]"); if(b) openRequestFor(b.dataset.reqUnit, b.dataset.reqSerial);
+  });
+  $("#reqType").addEventListener("change", syncReqType);
+  $("#reqCancel").addEventListener("click", ()=>switchTab("inv"));
+  $("#reqForm").addEventListener("submit", async e=>{
+    e.preventDefault();
+    const p=buildRequestPayload();
+    if(!p.requester){ toast("Enter your name"); return; }
+    if(p.type==="reassign" && !p.requestedTrade){ toast("Pick the correct trade"); return; }
+    if(!p.detail){ toast("Add a detail/reason"); return; }
+    cacheSet("bac_portal_requester", p.requester);
+    const res=await submitRequest(p);
+    if(res.queued) toast("Saved offline — will send when back online");
+    else toast("Request submitted for Unit "+p.unit);
+    if(res.ok && WORKER_URL){ await loadOpenRequests(STATE.site); renderInventory(); }
+    switchTab("my");
+  });
+}
+async function init(){
+  fillTradeControls(); bind();
+  STATE.adminName = localStorage.getItem("bac_admin_name") || "";
+  setAdmin(!!adminKey());   // stay logged in on this device (restore admin if the key is cached)
+  if(STATE.admin && new URLSearchParams(location.search).get("admin")==="import"){ $("#importPanel").style.display="block"; }
+  STATE.meta = await loadMeta();
+  if(STATE.meta && STATE.meta.builtAt){ const el=$("#asof"); el.innerHTML = fmtUpdated(STATE.meta.builtAt); el.classList.add("show"); }
+  STATE.siteIndex = await loadSiteIndex();
+  const sel=$("#siteSelect");
+  STATE.siteIndex.forEach(s=>{ const o=document.createElement("option"); o.value=s.code; o.textContent=s.name+" ("+s.count+")"; sel.appendChild(o); });
+  renderInventory();
+  flushQueue();
+  window.addEventListener("online", async ()=>{
+    await flushQueue();
+    if(STATE.site){ await loadOpenRequests(STATE.site); renderInventory(); }
+  });
+}
+init();
+</script>
+</body>
+</html>
