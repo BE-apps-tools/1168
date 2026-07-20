@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="icon" href="data:,">
+<title>Admin | Blattner</title>
+<style>
+  :root{
+    --dark-blue:#02568A; --energy-blue:#2DA2DB; --light-blue:#B9E5FB;
+    --bright-gray:#F2F2F2; --light-gray:#BCBCBC; --medium-gray:#76777B;
+    --dark-gray:#333333; --white:#FFFFFF; --black:#000000;
+    --r:14px; --r-sm:10px; --r-lg:20px;
+    --shadow:0 1px 4px #BCBCBC; --shadow-lift:0 10px 24px #BCBCBC;
+    --rail-w:88px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{overflow-x:hidden;}
+  body{font-family:Arial, Helvetica, sans-serif;color:var(--dark-gray);background:var(--bright-gray);
+    line-height:1.5;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;}
+  h1,h2,h3{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;color:var(--dark-blue);line-height:1.05;}
+  a{color:var(--energy-blue);}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+  @keyframes railIn{from{opacity:0;transform:translateX(-10px);}to{opacity:1;transform:none;}}
+
+  /* ---------- App shell ---------- */
+  .app-shell{display:flex;min-height:100vh;align-items:stretch;}
+  .nav-rail{flex:0 0 var(--rail-w);width:var(--rail-w);background:var(--dark-blue);color:var(--white);
+    display:flex;flex-direction:column;align-items:stretch;padding:16px 8px 14px;position:sticky;top:0;height:100vh;
+    animation:railIn .3s ease both;}
+  .rail-logo{display:block;width:46px;height:46px;margin:0 auto 22px;}
+  .rail-logo svg{width:100%;height:100%;display:block;}
+  .rail-item{display:block;text-align:center;color:var(--light-blue);text-decoration:none;padding:12px 4px;
+    border-radius:var(--r-sm);margin-bottom:6px;transition:background .18s ease,color .18s ease,transform .18s ease;}
+  .rail-item:hover{background:var(--energy-blue);color:var(--white);transform:translateY(-2px);}
+  .rail-item.active{background:var(--white);color:var(--dark-blue);}
+  .rail-ic{width:20px;height:20px;margin:0 auto 7px;position:relative;display:block;}
+  .ic-hub::before{content:"";position:absolute;left:0;top:0;width:8px;height:8px;border-radius:2px;background:currentColor;
+    box-shadow:12px 0 0 currentColor,0 12px 0 currentColor,12px 12px 0 currentColor;}
+  .ic-assets::before{content:"";position:absolute;left:0;top:2px;width:20px;height:3px;border-radius:2px;background:currentColor;
+    box-shadow:0 7px 0 currentColor,0 14px 0 currentColor;}
+  .ic-deliv::before{content:"";box-sizing:border-box;position:absolute;left:1px;top:1px;width:18px;height:18px;border:2px solid currentColor;border-radius:3px;}
+  .ic-deliv::after{content:"";box-sizing:border-box;position:absolute;left:6px;top:5px;width:6px;height:10px;border:2px solid currentColor;
+    border-top:none;border-left:none;transform:rotate(45deg);}
+  .ic-admin::before{content:"";box-sizing:border-box;position:absolute;left:5px;top:1px;width:10px;height:8px;border:2px solid currentColor;border-bottom:none;border-radius:5px 5px 0 0;}
+  .ic-admin::after{content:"";box-sizing:border-box;position:absolute;left:3px;top:8px;width:14px;height:11px;background:currentColor;border-radius:2px;}
+  .rail-lbl{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:9px;letter-spacing:0.04em;display:block;}
+  .rail-foot{margin-top:auto;text-align:center;font-family:'Arial Black', Arial, sans-serif;font-size:10px;
+    letter-spacing:0.12em;color:var(--energy-blue);padding-top:12px;}
+
+  .app-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{background:var(--dark-blue);color:var(--white);padding:20px 32px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .topbar h1{color:var(--white);font-size:22px;letter-spacing:0.01em;}
+  .topbar .tb-sub{font-size:11px;text-transform:uppercase;letter-spacing:0.10em;color:var(--light-blue);font-weight:bold;margin-top:3px;}
+  .topbar .spacer{flex:1;}
+  .topbar .who{font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--light-blue);font-weight:bold;
+    border:1px solid var(--energy-blue);border-radius:999px;padding:7px 14px;display:none;}
+  .topbar .who.show{display:inline-block;}
+
+  main{max-width:1160px;width:100%;margin:0 auto;padding:32px 32px 56px;}
+  .intro{margin-bottom:22px;animation:fadeUp .4s ease both;}
+  .intro h2{font-size:24px;margin-bottom:6px;}
+  .intro .rule{width:64px;height:4px;background:var(--energy-blue);margin:10px 0 14px;border-radius:2px;}
+  .intro p{color:var(--medium-gray);max-width:640px;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px;}
+  .card{background:var(--white);border:1px solid var(--light-gray);border-radius:var(--r);overflow:hidden;
+    display:flex;flex-direction:column;min-height:210px;box-shadow:var(--shadow);
+    transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;animation:fadeUp .5s ease both;}
+  .card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lift);border-color:var(--energy-blue);}
+  .card .accent-top{height:5px;background:var(--energy-blue);}
+  .card .body{padding:22px 22px 8px;flex:1;}
+  .card .chip{width:44px;height:44px;border-radius:12px;background:var(--light-blue);position:relative;margin-bottom:14px;}
+  .card .chip::before{content:"";position:absolute;left:12px;top:14px;width:20px;height:3px;border-radius:2px;background:var(--dark-blue);
+    box-shadow:0 6px 0 var(--dark-blue),0 12px 0 var(--dark-blue);}
+  .card.proc .chip::before{content:"";box-sizing:border-box;left:12px;top:12px;width:20px;height:20px;border:3px solid var(--dark-blue);border-radius:4px;background:none;box-shadow:none;}
+  .card.proc .chip::after{content:"";box-sizing:border-box;position:absolute;left:18px;top:16px;width:7px;height:12px;border:3px solid var(--dark-blue);
+    border-top:none;border-left:none;transform:rotate(45deg);}
+  .card.lock .accent-top{background:var(--dark-blue);}
+  .card.lock .chip::before{content:"";box-sizing:border-box;position:absolute;left:14px;top:10px;width:16px;height:13px;
+    border:3px solid var(--dark-blue);border-bottom:none;border-radius:8px 8px 0 0;background:none;box-shadow:none;}
+  .card.lock .chip::after{content:"";box-sizing:border-box;position:absolute;left:11px;top:19px;width:22px;height:16px;
+    background:var(--dark-blue);border-radius:3px;box-shadow:none;}
+  .card .eyebrow{font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:0.10em;color:var(--medium-gray);margin-bottom:6px;}
+  .card h3{font-size:19px;color:var(--dark-blue);margin-bottom:10px;}
+  .card p{font-size:14px;color:var(--medium-gray);}
+  .card .foot{padding:14px 22px 22px;}
+  .open-btn{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:12px;letter-spacing:0.04em;
+    padding:11px 20px;border:1px solid var(--dark-blue);background:var(--dark-blue);color:var(--white);border-radius:var(--r-sm);
+    text-decoration:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:background .18s ease,border-color .18s ease,gap .18s ease;}
+  .open-btn::after{content:"\2192";}
+  .open-btn:hover{background:var(--energy-blue);border-color:var(--energy-blue);gap:12px;}
+  .linkbtn{background:none;border:none;font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;
+    font-size:11px;letter-spacing:0.04em;color:var(--medium-gray);cursor:pointer;padding:11px 8px;}
+  .linkbtn:hover{color:var(--dark-blue);}
+
+  /* Open requests card */
+  .reqcard{background:var(--white);border:1px solid var(--light-gray);border-radius:var(--r);overflow:hidden;
+    box-shadow:var(--shadow);margin-top:24px;animation:fadeUp .5s ease both;}
+  .reqcard .card-head{background:var(--dark-blue);padding:14px 20px;display:flex;align-items:center;gap:12px;}
+  .reqcard .card-head h3{color:var(--white);font-size:15px;}
+  .reqcard .card-head .rq-refresh{margin-left:auto;background:none;border:1px solid var(--energy-blue);color:var(--light-blue);
+    font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:10px;letter-spacing:0.04em;
+    border-radius:999px;padding:6px 12px;cursor:pointer;}
+  .reqcard .card-head .rq-refresh:hover{background:var(--energy-blue);color:var(--white);}
+  .reqrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:13px 20px;border-bottom:1px solid var(--bright-gray);font-size:13px;}
+  .reqrow:last-child{border-bottom:none;}
+  .reqrow .rq-main{min-width:0;}
+  .reqrow .rq-main strong{color:var(--dark-blue);}
+  .badge{display:inline-block;background:var(--bright-gray);border:1px solid var(--light-gray);color:var(--dark-blue);
+    border-radius:999px;font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:0.04em;padding:3px 10px;white-space:nowrap;}
+  .badge.issue{color:var(--medium-gray);}
+  .muted{color:var(--medium-gray);font-size:12px;}
+  .rq-open{margin-left:auto;font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:10px;letter-spacing:0.04em;
+    color:var(--white);background:var(--dark-blue);border-radius:999px;padding:6px 12px;text-decoration:none;white-space:nowrap;}
+  .rq-open:hover{background:var(--energy-blue);}
+  .rq-empty{padding:20px;color:var(--medium-gray);font-size:13px;}
+
+  footer{max-width:1160px;width:100%;margin:0 auto;padding:0 32px 40px;color:var(--medium-gray);font-size:11px;}
+
+  @media (max-width:820px){
+    :root{--rail-w:100%;}
+    .app-shell{flex-direction:column;}
+    .nav-rail{flex-direction:row;height:auto;position:static;padding:8px;align-items:center;gap:6px;}
+    .rail-logo{margin:0 8px 0 4px;width:38px;height:38px;flex:0 0 38px;}
+    .rail-item{flex:1;margin-bottom:0;padding:8px 4px;}
+    .rail-ic{width:18px;height:18px;margin:0 auto 4px;}
+    .rail-foot{display:none;}
+  }
+  @media (max-width:560px){
+    .topbar{padding:16px 16px;} main{padding:22px 16px 48px;} footer{padding:0 16px 32px;}
+    .topbar h1{font-size:18px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="nav-rail" aria-label="Primary">
+    <a class="rail-logo" href="index.html" aria-label="Blattner"><svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 400 400" style="enable-background:new 0 0 400 400;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#FFFFFF;}
+</style>
+<g>
+	<polygon class="st0" points="215.2,164.1 231.7,122.3 195,122.3 	"/>
+	<path class="st0" d="M233.4,200l0.1,0.2c0,0,0-0.1,0.1-0.1L233.4,200z"/>
+	<path class="st0" d="M233.5,200.2l20.7,24.4c7.9-3.4,13.5-8.4,17.7-15.1l-38.4-9.5C233.6,200.1,233.5,200.2,233.5,200.2"/>
+	<path class="st0" d="M278.4,128.5l-38.3,42.9l-4.3,4.8l4.9-0.2l43.1-1.6l-45.3,13.9l0,0l-0.4,0.1l0.3,0.2h0l33.6,20.9
+		c4.2-6.6,7-14.8,9.5-24.9l2.7-11C289.4,152.7,289.2,136.7,278.4,128.5"/>
+	<polygon class="st0" points="202.5,163.7 195,122.3 167.4,122.3 	"/>
+	<path class="st0" d="M254.5,122.3h-22.8l-4.3,43.1l-0.2,1.7l2.1-1.6l49-37C273.1,124.5,265.4,122.3,254.5,122.3"/>
+	<path class="st0" d="M209.6,206.5H116l8.1-33h77.5l-43-50.7H83.8L31.8,334.1h168.4c30.3,0,55.3-9.6,66.4-56
+		c6.5-27.1,1.1-43.5-19.3-50.5l-22.9-27.1C220.8,204.7,215.8,206.5,209.6,206.5 M214.8,267.8c-3,12.3-11.4,15.5-22.9,15.5H97.2
+		l8.1-33h94.8C211.5,250.3,218.3,253.5,214.8,267.8"/>
+	<polygon class="st0" points="90.2,64.6 124.9,105.6 313.3,105.7 280.2,287.9 321.4,335.4 368.2,64.7 	"/>
+</g>
+</svg></a>
+    <a class="rail-item" href="index.html"><span class="rail-ic ic-hub"></span><span class="rail-lbl">Dashboard</span></a>
+    <a class="rail-item" href="inventory.html"><span class="rail-ic ic-assets"></span><span class="rail-lbl">Assets</span></a>
+    <a class="rail-item" href="deliveries.html"><span class="rail-ic ic-deliv"></span><span class="rail-lbl">Deliveries</span></a>
+    <a class="rail-item active" href="admin.html"><span class="rail-ic ic-admin"></span><span class="rail-lbl">Admin</span></a>
+    <div class="rail-foot">BEI</div>
+  </nav>
+
+  <div class="app-body">
+    <header class="topbar">
+      <div>
+        <h1>Admin</h1>
+        <div class="tb-sub">Blattner &middot; BEI</div>
+      </div>
+      <div class="spacer"></div>
+      <div class="who" id="who"></div>
+    </header>
+
+    <main>
+      <div class="intro">
+        <h2>Admin</h2>
+        <div class="rule"></div>
+        <p>Sign in once to manage Equipment Master imports and delivery trackers. Your sign-in is shared across the portal on this device.</p>
+      </div>
+      <div class="grid" id="adminZone"></div>
+      <div id="openReqsWrap"></div>
+    </main>
+
+    <footer>&copy; 2026 Blattner. Internal tools.</footer>
+  </div>
+</div>
+
+<script>
+"use strict";
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+const $ = s => document.querySelector(s);
+
+/* Admin sign-in shares localStorage with inventory.html + deliveries.html (same origin). */
+function adminKey(){ return localStorage.getItem("bac_admin_key")||""; }
+function adminName(){ return localStorage.getItem("bac_admin_name")||""; }
+function adminSignIn(){
+  const n=prompt("Your name (shown on updates):"); if(n===null) return;
+  const k=prompt("Admin key:"); if(k===null) return;
+  localStorage.setItem("bac_admin_name", n.trim()||"admin");
+  localStorage.setItem("bac_admin_key", k.trim());
+  renderAdmin();
+}
+function adminSignOut(){ localStorage.removeItem("bac_admin_key"); renderAdmin(); }
+
+/* ---------- Open change requests (read-only, from the public GitHub Issues API) ---------- */
+const GH_ISSUES = "https://api.github.com/repos/be-apps-tools/1127/issues?state=open&per_page=100";
+function labelsOf(it){ return (it.labels||[]).map(l => typeof l==="string" ? l : (l&&l.name)||""); }
+function parseMarker(body){ const m=/```json\s*({[\s\S]*?})\s*```/.exec(body||""); if(!m) return null; try{ return JSON.parse(m[1]); }catch(e){ return null; } }
+function field(body,label){ const m=new RegExp("\\*\\*"+label+":\\*\\*\\s*(.*)").exec(body||""); return m?m[1].trim():""; }
+async function fetchOpenIssues(){
+  const r=await fetch(GH_ISSUES,{headers:{"Accept":"application/vnd.github+json"}});
+  if(!r.ok) throw new Error("GitHub "+r.status);
+  const a=await r.json();
+  return Array.isArray(a)?a.filter(it=>!it.pull_request):[];
+}
+async function loadOpenRequests(){
+  const w=$("#openReqsWrap");
+  w.innerHTML='<div class="reqcard"><div class="card-head"><h3>Open change requests</h3></div><div class="rq-empty">Loading…</div></div>';
+  let reqs;
+  try{
+    const arr=await fetchOpenIssues();
+    reqs=arr.filter(it=>{ const L=labelsOf(it); return L.includes("request:reassign")||L.includes("request:issue"); })
+      .map(it=>{ const L=labelsOf(it), m=parseMarker(it.body)||{};
+        const type=L.includes("request:reassign")?"reassign":"issue";
+        return { number:it.number, url:it.html_url, type,
+          unit:m.unit||field(it.body,"Unit"), serial:m.serial||field(it.body,"Serial"),
+          site:m.site||field(it.body,"Site"), requestedTrade:m.requestedTrade||field(it.body,"Requested trade"),
+          current:field(it.body,"Current trade"), requester:field(it.body,"Requester") };
+      });
+  }catch(e){
+    w.innerHTML='<div class="reqcard"><div class="card-head"><h3>Open change requests</h3><button class="rq-refresh" id="rqRefresh">Retry</button></div><div class="rq-empty">Could not load requests ('+esc(e.message)+'). GitHub may be rate-limiting — try again shortly.</div></div>';
+    return;
+  }
+  renderOpenReqs(reqs);
+}
+function renderOpenReqs(reqs){
+  const rows = reqs.length ? reqs.map(r=>{
+    const badge = r.type==="reassign" ? '<span class="badge">Reassign</span>' : '<span class="badge issue">Issue</span>';
+    const change = r.type==="reassign" ? (esc(r.current||"(none)")+' &rarr; '+esc(r.requestedTrade||"?")) : 'Reported issue';
+    const meta = [r.site, r.requester].filter(Boolean).map(esc).join(' &middot; ');
+    return '<div class="reqrow">'+badge+
+      '<span class="rq-main"><strong>Unit '+esc(r.unit||"?")+'</strong> <span class="muted">SN '+esc(r.serial||"—")+'</span> &middot; '+change+'</span>'+
+      (meta?'<span class="muted">'+meta+'</span>':'')+
+      '<a class="rq-open" href="'+esc(r.url)+'" target="_blank" rel="noopener">Open #'+esc(r.number)+'</a></div>';
+  }).join("") : '<div class="rq-empty">No open change requests. Nothing to action right now.</div>';
+  $("#openReqsWrap").innerHTML =
+    '<div class="reqcard"><div class="card-head"><h3>Open change requests'+(reqs.length?(' ('+reqs.length+')'):'')+'</h3>'+
+      '<button class="rq-refresh" id="rqRefresh">Refresh</button></div>'+rows+'</div>';
+}
+
+function renderAdmin(){
+  const z=$("#adminZone"), who=$("#who");
+  if(adminKey()){
+    who.textContent = "Signed in" + (adminName()?(" · "+adminName()):""); who.classList.add("show");
+    z.innerHTML =
+      '<div class="card"><div class="accent-top"></div>' +
+        '<div class="body"><div class="chip" aria-hidden="true"></div>' +
+          '<div class="eyebrow">Inventory</div><h3>Equipment Master</h3>' +
+          '<p>Upload the latest Equipment Master .xlsx and publish updated inventory — parsed in your browser, no file upload.</p></div>' +
+        '<div class="foot"><a class="open-btn" href="inventory.html?admin=import">Open importer</a></div></div>' +
+      '<div class="card proc"><div class="accent-top"></div>' +
+        '<div class="body"><div class="chip" aria-hidden="true"></div>' +
+          '<div class="eyebrow">Procurement</div><h3>New tracker</h3>' +
+          '<p>Create a delivery tracker from a Requisition .xlsx.</p></div>' +
+        '<div class="foot"><a class="open-btn" href="deliveries.html?admin=new">Open tracker form</a></div></div>' +
+      '<div class="card lock"><div class="accent-top"></div>' +
+        '<div class="body"><div class="chip" aria-hidden="true"></div>' +
+          '<div class="eyebrow">Session</div><h3>Signed in</h3>' +
+          '<p>' + esc(adminName()||"admin") + ' — signed in on this device. Sign out to require the admin key again.</p></div>' +
+        '<div class="foot"><button class="linkbtn" id="adminSignOut">Sign out</button></div></div>';
+    loadOpenRequests();
+  } else {
+    who.classList.remove("show"); who.textContent="";
+    z.innerHTML =
+      '<div class="card lock"><div class="accent-top"></div>' +
+        '<div class="body"><div class="chip" aria-hidden="true"></div>' +
+          '<div class="eyebrow">Restricted</div><h3>Admin sign in</h3>' +
+          '<p>Enter the admin key to manage Equipment Master imports and delivery trackers.</p></div>' +
+        '<div class="foot"><button class="open-btn" id="adminSignIn">Sign in</button></div></div>';
+    $("#openReqsWrap").innerHTML="";
+  }
+}
+$("#adminZone").addEventListener("click", e=>{
+  if(e.target.closest("#adminSignIn")) adminSignIn();
+  else if(e.target.closest("#adminSignOut")) adminSignOut();
+});
+$("#openReqsWrap").addEventListener("click", e=>{ if(e.target.closest("#rqRefresh")) loadOpenRequests(); });
+renderAdmin();
+</script>
+</body>
+</html>
