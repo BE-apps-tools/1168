@@ -4,6 +4,17 @@ A shared, GitHub-backed inventory portal for reviewing the Blattner Equipment
 Master (scoped by job site) and submitting **Reassign Trade** / **Report Issue**
 change requests — which become auto-reconciling GitHub Issues.
 
+> **Environment:** this repo is the **Panhandle Solar** instance
+> (`be-apps-tools/1168`), served at `https://be-apps-tools.github.io/1168/` and
+> backed by its own Cloudflare Worker **`1168-panhandle`** with its own admin
+> key. It was duplicated from `be-apps-tools/1127` and given its own clean data.
+> Browser state is namespaced per site path, so it never mixes with other
+> environments. To stand up **another** environment (and keep it a clean,
+> no-bleed slate), follow **[`CLONING.md`](CLONING.md)** step by step.
+>
+> _Note:_ any leftover `claude/*` branches from the duplication are stale and
+> safe to delete (see `CLONING.md` §8).
+
 ## How it works
 
 - **Data source:** the daily Oracle JDE export `Equipment Master V1.<n>.xlsx` is

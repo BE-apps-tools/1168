@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+window.__ns=location.pathname.replace(/[^/]*$/,"");
+function nsGet(k){try{return localStorage.getItem(window.__ns+k);}catch(e){return null;}}
+function nsSet(k,v){try{localStorage.setItem(window.__ns+k,v);}catch(e){}}
+function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20400%20400%27%3E%3Crect%20width%3D%27400%27%20height%3D%27400%27%20rx%3D%2776%27%20fill%3D%27%2302568A%27%2F%3E%3Cg%20fill%3D%27%23FFFFFF%27%3E%3Cpolygon%20points%3D%27215.2%2C164.1%20231.7%2C122.3%20195%2C122.3%20%27%2F%3E%3Cpath%20d%3D%27M233.4%2C200l0.1%2C0.2c0%2C0%2C0-0.1%2C0.1-0.1L233.4%2C200z%27%2F%3E%3Cpath%20d%3D%27M233.5%2C200.2l20.7%2C24.4c7.9-3.4%2C13.5-8.4%2C17.7-15.1l-38.4-9.5C233.6%2C200.1%2C233.5%2C200.2%2C233.5%2C200.2%27%2F%3E%3Cpath%20d%3D%27M278.4%2C128.5l-38.3%2C42.9l-4.3%2C4.8l4.9-0.2l43.1-1.6l-45.3%2C13.9l0%2C0l-0.4%2C0.1l0.3%2C0.2h0l33.6%2C20.9%20c4.2-6.6%2C7-14.8%2C9.5-24.9l2.7-11C289.4%2C152.7%2C289.2%2C136.7%2C278.4%2C128.5%27%2F%3E%3Cpolygon%20points%3D%27202.5%2C163.7%20195%2C122.3%20167.4%2C122.3%20%27%2F%3E%3Cpath%20d%3D%27M254.5%2C122.3h-22.8l-4.3%2C43.1l-0.2%2C1.7l2.1-1.6l49-37C273.1%2C124.5%2C265.4%2C122.3%2C254.5%2C122.3%27%2F%3E%3Cpath%20d%3D%27M209.6%2C206.5H116l8.1-33h77.5l-43-50.7H83.8L31.8%2C334.1h168.4c30.3%2C0%2C55.3-9.6%2C66.4-56%20c6.5-27.1%2C1.1-43.5-19.3-50.5l-22.9-27.1C220.8%2C204.7%2C215.8%2C206.5%2C209.6%2C206.5%20M214.8%2C267.8c-3%2C12.3-11.4%2C15.5-22.9%2C15.5H97.2%20l8.1-33h94.8C211.5%2C250.3%2C218.3%2C253.5%2C214.8%2C267.8%27%2F%3E%3Cpolygon%20points%3D%2790.2%2C64.6%20124.9%2C105.6%20313.3%2C105.7%20280.2%2C287.9%20321.4%2C335.4%20368.2%2C64.7%20%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
@@ -158,7 +165,7 @@
   .acc-btn:hover{background:var(--energy-blue);border-color:var(--energy-blue);}
   .acc-err{color:#EC9522;font-size:13px;margin-top:12px;min-height:16px;}
 </style>
-  <script>try{if(!localStorage.getItem("bac_admin_key"))document.documentElement.classList.add("acc-wait");}catch(e){}</script>
+  <script>try{if(!nsGet("bac_admin_key"))document.documentElement.classList.add("acc-wait");}catch(e){}</script>
 </head>
 <body>
 <div id="accGate" role="dialog" aria-modal="true" aria-label="Site access">
@@ -292,7 +299,7 @@
 (function(){
   var D=document.documentElement;
   function reveal(){ D.classList.remove("acc-wait"); }
-  try{ if(localStorage.getItem("bac_admin_key")){ reveal(); return; } }catch(e){ reveal(); return; }
+  try{ if(nsGet("bac_admin_key")){ reveal(); return; } }catch(e){ reveal(); return; }
   async function sha(s){ var b=await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
     return Array.prototype.map.call(new Uint8Array(b), function(x){return x.toString(16).padStart(2,"0");}).join(""); }
   fetch("data/access.json",{cache:"no-store"}).then(function(r){return r.ok?r.json():{view:null};})
@@ -300,13 +307,13 @@
     .then(async function(cfg){
       var v=cfg&&cfg.view;
       if(!v||!v.salt||!v.hash){ reveal(); return; }
-      var stored=""; try{ stored=localStorage.getItem("bac_view_key")||""; }catch(e){}
+      var stored=""; try{ stored=nsGet("bac_view_key")||""; }catch(e){}
       if(stored && (await sha(v.salt+":"+stored))===v.hash){ reveal(); return; }
       D.classList.remove("acc-wait"); D.classList.add("acc-locked");
       var input=document.getElementById("accInput"), btn=document.getElementById("accBtn"), err=document.getElementById("accErr");
       async function attempt(){
         var k=(input.value||"").trim(); if(!k) return;
-        if((await sha(v.salt+":"+k))===v.hash){ try{localStorage.setItem("bac_view_key",k);}catch(e){} location.reload(); }
+        if((await sha(v.salt+":"+k))===v.hash){ try{nsSet("bac_view_key",k);}catch(e){} location.reload(); }
         else { err.textContent="That access key isn't right. Contact your SIS for access."; input.value=""; input.focus(); }
       }
       btn.addEventListener("click", attempt);
