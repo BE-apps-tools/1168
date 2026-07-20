@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20400%20400%27%3E%3Crect%20width%3D%27400%27%20height%3D%27400%27%20rx%3D%2776%27%20fill%3D%27%2302568A%27%2F%3E%3Cg%20fill%3D%27%23FFFFFF%27%3E%3Cpolygon%20points%3D%27215.2%2C164.1%20231.7%2C122.3%20195%2C122.3%20%27%2F%3E%3Cpath%20d%3D%27M233.4%2C200l0.1%2C0.2c0%2C0%2C0-0.1%2C0.1-0.1L233.4%2C200z%27%2F%3E%3Cpath%20d%3D%27M233.5%2C200.2l20.7%2C24.4c7.9-3.4%2C13.5-8.4%2C17.7-15.1l-38.4-9.5C233.6%2C200.1%2C233.5%2C200.2%2C233.5%2C200.2%27%2F%3E%3Cpath%20d%3D%27M278.4%2C128.5l-38.3%2C42.9l-4.3%2C4.8l4.9-0.2l43.1-1.6l-45.3%2C13.9l0%2C0l-0.4%2C0.1l0.3%2C0.2h0l33.6%2C20.9%20c4.2-6.6%2C7-14.8%2C9.5-24.9l2.7-11C289.4%2C152.7%2C289.2%2C136.7%2C278.4%2C128.5%27%2F%3E%3Cpolygon%20points%3D%27202.5%2C163.7%20195%2C122.3%20167.4%2C122.3%20%27%2F%3E%3Cpath%20d%3D%27M254.5%2C122.3h-22.8l-4.3%2C43.1l-0.2%2C1.7l2.1-1.6l49-37C273.1%2C124.5%2C265.4%2C122.3%2C254.5%2C122.3%27%2F%3E%3Cpath%20d%3D%27M209.6%2C206.5H116l8.1-33h77.5l-43-50.7H83.8L31.8%2C334.1h168.4c30.3%2C0%2C55.3-9.6%2C66.4-56%20c6.5-27.1%2C1.1-43.5-19.3-50.5l-22.9-27.1C220.8%2C204.7%2C215.8%2C206.5%2C209.6%2C206.5%20M214.8%2C267.8c-3%2C12.3-11.4%2C15.5-22.9%2C15.5H97.2%20l8.1-33h94.8C211.5%2C250.3%2C218.3%2C253.5%2C214.8%2C267.8%27%2F%3E%3Cpolygon%20points%3D%2790.2%2C64.6%20124.9%2C105.6%20313.3%2C105.7%20280.2%2C287.9%20321.4%2C335.4%20368.2%2C64.7%20%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<title>Deliveries | Blattner</title>
+<style>
+  :root{
+    --dark-blue:#02568A; --energy-blue:#2DA2DB; --light-blue:#B9E5FB;
+    --bright-gray:#F2F2F2; --light-gray:#BCBCBC; --medium-gray:#76777B;
+    --dark-gray:#333333; --white:#FFFFFF; --black:#000000;
+    --r:14px; --r-sm:10px; --r-lg:20px;
+    --shadow:0 1px 4px #BCBCBC; --shadow-lift:0 10px 24px #BCBCBC;
+    --rail-w:88px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{overflow-x:hidden;}
+  body{font-family:Arial, Helvetica, sans-serif;color:var(--dark-gray);background:var(--bright-gray);line-height:1.5;-webkit-text-size-adjust:100%;}
+  h1,h2,h3{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;color:var(--dark-blue);line-height:1.05;}
+  a{color:var(--energy-blue);}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+  @keyframes railIn{from{opacity:0;transform:translateX(-10px);}to{opacity:1;transform:none;}}
+
+  /* ---------- App shell ---------- */
+  .app-shell{display:flex;min-height:100vh;align-items:stretch;}
+  .nav-rail{flex:0 0 var(--rail-w);width:var(--rail-w);background:var(--dark-blue);color:var(--white);
+    display:flex;flex-direction:column;align-items:stretch;padding:16px 8px 14px;min-height:100vh;
+    animation:railIn .3s ease both;}
+  .rail-logo{display:block;width:46px;height:46px;margin:0 auto 22px;}
+  .rail-logo svg{width:100%;height:100%;display:block;}
+  .rail-item{display:block;text-align:center;color:var(--light-blue);text-decoration:none;padding:12px 4px;
+    border-radius:var(--r-sm);margin-bottom:6px;transition:background .18s ease,color .18s ease,transform .18s ease;}
+  .rail-item:hover{background:var(--energy-blue);color:var(--white);transform:translateY(-2px);}
+  .rail-item.active{background:var(--white);color:var(--dark-blue);}
+  .rail-ic{width:20px;height:20px;margin:0 auto 7px;position:relative;display:block;}
+  .ic-hub::before{content:"";position:absolute;left:0;top:0;width:8px;height:8px;border-radius:2px;background:currentColor;
+    box-shadow:12px 0 0 currentColor,0 12px 0 currentColor,12px 12px 0 currentColor;}
+  .ic-assets::before{content:"";position:absolute;left:0;top:2px;width:20px;height:3px;border-radius:2px;background:currentColor;
+    box-shadow:0 7px 0 currentColor,0 14px 0 currentColor;}
+  .ic-deliv::before{content:"";box-sizing:border-box;position:absolute;left:1px;top:1px;width:18px;height:18px;border:2px solid currentColor;border-radius:3px;}
+  .ic-deliv::after{content:"";box-sizing:border-box;position:absolute;left:6px;top:5px;width:6px;height:10px;border:2px solid currentColor;
+    border-top:none;border-left:none;transform:rotate(45deg);}
+  .ic-admin::before{content:"";box-sizing:border-box;position:absolute;left:5px;top:1px;width:10px;height:8px;border:2px solid currentColor;border-bottom:none;border-radius:5px 5px 0 0;}
+  .ic-admin::after{content:"";box-sizing:border-box;position:absolute;left:3px;top:8px;width:14px;height:11px;background:currentColor;border-radius:2px;}
+  .ic-guide::before{content:"";box-sizing:border-box;position:absolute;left:1px;top:2px;width:18px;height:16px;border:2px solid currentColor;border-radius:2px;}
+  .ic-guide::after{content:"";position:absolute;left:9px;top:2px;width:2px;height:16px;background:currentColor;}
+  .rail-lbl{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:9px;letter-spacing:0.04em;display:block;}
+  .rail-foot{margin-top:auto;text-align:center;font-family:'Arial Black', Arial, sans-serif;font-size:10px;
+    letter-spacing:0.12em;color:var(--energy-blue);padding-top:12px;}
+  .app-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{background:var(--dark-blue);color:var(--white);padding:18px 32px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .topbar .titles{min-width:0;}
+  .topbar h1{color:var(--white);font-size:20px;}
+  .topbar .sub{font-size:11px;text-transform:uppercase;letter-spacing:0.10em;color:var(--light-blue);font-weight:bold;margin-top:3px;}
+  .topbar .spacer{flex:1;}
+
+  main{max-width:1400px;width:100%;margin:0 auto;padding:22px 24px 56px;}
+
+  .adminbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+  .adminbar .who{font-size:12px;color:var(--medium-gray);font-weight:bold;text-transform:uppercase;letter-spacing:0.05em;}
+  .banner{display:none;padding:10px 14px;font-size:12px;font-weight:bold;background:var(--light-blue);color:var(--dark-blue);border:1px solid var(--energy-blue);border-radius:var(--r-sm);margin-bottom:14px;}
+  .banner.show{display:block;}
+
+  .toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px;}
+  .toolbar .search{flex:1 1 220px;min-width:0;}
+  input[type=text],input[type=file],select{width:100%;font-family:Arial, Helvetica, sans-serif;font-size:16px;color:var(--dark-gray);background:var(--white);border:1px solid var(--light-gray);border-radius:var(--r-sm);padding:11px 13px;transition:border-color .15s ease,box-shadow .15s ease;}
+  select{flex:0 1 auto;min-width:150px;}
+  input:focus,select:focus{outline:none;border-color:var(--energy-blue);box-shadow:0 0 0 2px var(--light-blue);}
+  .seg{display:inline-flex;border:1px solid var(--light-gray);border-radius:999px;overflow:hidden;}
+  .seg button{background:var(--white);border:none;font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:11px;letter-spacing:0.04em;color:var(--medium-gray);padding:10px 18px;cursor:pointer;transition:background .18s ease,color .18s ease;}
+  .seg button[aria-selected="true"]{background:var(--dark-blue);color:var(--white);}
+  #filtersBtn.on{background:var(--dark-blue);color:var(--white);border-color:var(--dark-blue);}
+  .filterbar{display:none;flex-wrap:wrap;gap:10px;align-items:center;margin:-4px 0 16px;padding:12px 14px;background:var(--white);border:1px solid var(--light-gray);border-radius:var(--r-sm);box-shadow:var(--shadow);}
+  .filterbar.show{display:flex;}
+  .filterbar .fgrp{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;}
+  .filterbar select{min-width:150px;width:auto;flex:0 1 auto;}
+  .filterbar input[type=date]{width:auto;flex:0 1 auto;font-size:14px;padding:9px 11px;}
+  .filterbar .flbl{font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:0.05em;color:var(--medium-gray);}
+  .linkbtn{background:none;border:none;color:var(--energy-blue);font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:11px;letter-spacing:0.04em;cursor:pointer;padding:8px 6px;margin-left:auto;}
+  .linkbtn:hover{color:var(--dark-blue);}
+
+  .btn{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:12px;letter-spacing:0.04em;padding:11px 16px;border:1px solid var(--dark-blue);background:var(--dark-blue);color:var(--white);cursor:pointer;border-radius:var(--r-sm);display:inline-flex;align-items:center;gap:8px;min-height:40px;transition:background .18s ease,border-color .18s ease,transform .18s ease;}
+  .btn:hover{background:var(--energy-blue);border-color:var(--energy-blue);transform:translateY(-1px);}
+  .btn.small{font-size:11px;padding:8px 11px;min-height:34px;}
+  .btn.secondary{background:var(--white);color:var(--dark-blue);border-color:var(--light-gray);}
+  .btn.secondary:hover{background:var(--bright-gray);border-color:var(--dark-blue);}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+
+  .pager{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .pg-btn{background:var(--white);border:1px solid var(--light-gray);border-radius:var(--r-sm);color:var(--dark-blue);font-family:'Arial Black', Arial, sans-serif;font-size:15px;line-height:1;padding:7px 13px;cursor:pointer;min-height:34px;}
+  .pg-btn:hover:not(:disabled){border-color:var(--energy-blue);}
+  .pg-btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .pager select{width:auto;min-width:120px;flex:0 0 auto;}
+  .pg-info{font-size:11px;color:var(--medium-gray);font-weight:bold;text-transform:uppercase;letter-spacing:0.05em;}
+
+  .card{background:var(--white);border:1px solid var(--light-gray);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);}
+  .card-head{background:var(--dark-blue);padding:14px 18px;}
+  .card-head h2{color:var(--white);font-size:15px;}
+  .card-body{padding:18px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:0.06em;color:var(--medium-gray);margin-bottom:6px;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:520px){ .two-col{grid-template-columns:1fr;} }
+
+  #newPanel{display:none;margin-bottom:20px;}
+  #newPanel.show{display:block;}
+
+  .table-scroll{overflow-x:auto;min-width:0;border:1px solid var(--light-gray);border-radius:var(--r-sm);background:var(--white);}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{background:var(--dark-blue);color:var(--white);font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:10px;letter-spacing:0.06em;text-align:left;padding:11px 8px;white-space:nowrap;}
+  tbody td{padding:9px 8px;border-bottom:1px solid var(--bright-gray);vertical-align:top;}
+  tbody tr:nth-child(even){background:var(--bright-gray);}
+
+  /* Progress meters + rings */
+  .lmeter{height:5px;background:var(--bright-gray);border-radius:3px;overflow:hidden;margin-top:6px;min-width:64px;max-width:120px;}
+  .lmeter>span{display:block;height:100%;background:var(--energy-blue);border-radius:3px;width:0;transition:width .8s ease;}
+  .lmeter.done>span{background:var(--dark-blue);}
+  .ring-wrap{position:relative;width:52px;height:52px;flex:0 0 52px;}
+  .ring-wrap .ring-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:'Arial Black', Arial, sans-serif;font-size:12px;color:var(--dark-blue);}
+  svg.chart.ring{width:100%;height:100%;display:block;}
+  .ring-fg{transition:stroke-dashoffset 1s ease;}
+
+  .trk{border:1px solid var(--light-gray);border-left:4px solid var(--energy-blue);border-radius:var(--r);background:var(--white);margin-bottom:14px;box-shadow:var(--shadow);transition:box-shadow .2s ease,transform .2s ease;animation:fadeUp .4s ease both;}
+  .trk:hover{box-shadow:var(--shadow-lift);transform:translateY(-2px);}
+  .trk .top{padding:14px 18px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;cursor:pointer;}
+  .trk .req{font-family:'Arial Black', Arial, sans-serif;color:var(--dark-blue);font-size:15px;}
+  .trk .meta{font-size:12px;color:var(--medium-gray);}
+  .trk .meta.orig{font-weight:bold;text-transform:uppercase;font-size:10px;letter-spacing:0.04em;border:1px solid var(--light-gray);border-radius:999px;padding:3px 10px;}
+  .trkTrade{width:auto;min-width:130px;flex:0 0 auto;font-size:12px;padding:6px 10px;min-height:0;}
+  .trk .prog{margin-left:auto;display:flex;align-items:center;gap:14px;}
+  .trk .prog .lines{font-size:12px;font-weight:bold;color:var(--dark-blue);text-align:right;white-space:nowrap;}
+  .trk .detail{display:none;padding:0 18px 18px;}
+  .trk.open .detail{display:block;}
+  .badge{display:inline-block;background:var(--bright-gray);border:1px solid var(--light-gray);color:var(--dark-blue);border-radius:999px;font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:0.04em;padding:3px 10px;white-space:nowrap;}
+  .st-none{color:var(--medium-gray);} .st-onsite{color:var(--energy-blue);} .st-partial{color:var(--energy-blue);} .st-complete{color:var(--dark-blue);}
+  .rd-over{color:#EC9522;font-weight:bold;white-space:nowrap;} .rd-soon{color:var(--energy-blue);font-weight:bold;white-space:nowrap;}
+  .rd-tag{display:inline-block;background:#EC9522;color:var(--white);font-size:8px;font-weight:bold;text-transform:uppercase;letter-spacing:0.04em;padding:2px 6px;border-radius:999px;vertical-align:middle;margin-left:4px;}
+  .rd-tag.soon{background:var(--energy-blue);}
+  .badge.over{background:#EC9522;color:var(--white);border-color:#EC9522;}
+  .badge.done{background:#007200;color:var(--white);border-color:#007200;}
+  .trk.done{border-left-color:#007200;}
+  .trk.done .top{background:#F2F2F2;}
+
+  /* New-tracker order preview */
+  .ordsum{font-size:12px;color:var(--medium-gray);font-weight:bold;text-transform:uppercase;letter-spacing:0.05em;margin:4px 0 10px;}
+  .ordrow{border:1px solid var(--light-gray);border-left:4px solid var(--light-gray);border-radius:var(--r-sm);margin-bottom:10px;}
+  .ord-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:11px 14px;}
+  .ord-head .req{font-family:'Arial Black', Arial, sans-serif;color:var(--dark-blue);font-size:14px;}
+  .ord-head .meta{font-size:12px;color:var(--medium-gray);}
+  .ord-view{margin-left:auto;background:none;border:1px solid var(--light-gray);border-radius:999px;font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:10px;letter-spacing:0.04em;color:var(--medium-gray);padding:6px 12px;cursor:pointer;}
+  .ord-view:hover{border-color:var(--energy-blue);color:var(--dark-blue);}
+  .ord-head select{min-width:150px;width:auto;flex:0 1 auto;}
+  .ordrow.ready{border-left-color:var(--energy-blue);}
+  .ordrow.dupe{opacity:0.6;border-left-color:var(--medium-gray);}
+  .ordrow.excluded{opacity:0.55;border-left-color:var(--medium-gray);}
+  .ord-ex{background:none;border:1px solid var(--light-gray);border-radius:999px;font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:10px;letter-spacing:0.04em;color:var(--medium-gray);padding:6px 12px;cursor:pointer;}
+  .ord-ex:hover{border-color:var(--dark-blue);color:var(--dark-blue);}
+  .ord-lines{display:none;padding:0 14px 12px;overflow-x:auto;}
+  .ordrow.open .ord-lines{display:block;}
+  .ord-lines table{width:100%;border-collapse:collapse;font-size:12px;}
+  .ord-lines th{text-align:left;color:var(--medium-gray);text-transform:uppercase;font-size:9px;letter-spacing:0.05em;padding:5px 8px;border-bottom:1px solid var(--light-gray);white-space:nowrap;}
+  .ord-lines td{padding:5px 8px;border-bottom:1px solid var(--bright-gray);vertical-align:top;}
+  .ordsum .ord-view{margin-left:8px;}
+
+  /* Per-line delivery/pickup logging */
+  .logcell .ev{display:flex;flex-wrap:nowrap;gap:6px;align-items:center;margin-bottom:5px;white-space:nowrap;}
+  .logcell .ev:last-child{margin-bottom:0;}
+  .logcell input{padding:6px 8px;font-size:13px;flex:0 0 auto;}
+  .logcell .btn{flex:0 0 auto;}
+  .logcell .evlbl{font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:0.04em;color:var(--medium-gray);width:52px;flex:0 0 52px;}
+  .pickedby{font-size:11px;color:var(--medium-gray);}
+  .pk{margin-bottom:4px;} .pk:last-child{margin-bottom:0;}
+  .pk-edit{background:none;border:none;color:var(--energy-blue);font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:9px;letter-spacing:0.04em;cursor:pointer;padding:0 2px;}
+  .pk-edit:hover{color:var(--dark-blue);}
+  .pk-form{display:none;align-items:center;gap:4px;white-space:nowrap;}
+  .pk.editing .pk-view{display:none;} .pk.editing .pk-form{display:inline-flex;}
+  .pk-form input{width:56px;padding:4px 6px;font-size:12px;}
+  .pk-save,.pk-cancel{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:9px;letter-spacing:0.04em;border-radius:var(--r-sm);padding:5px 9px;cursor:pointer;}
+  .pk-save{background:var(--dark-blue);color:var(--white);border:1px solid var(--dark-blue);}
+  .pk-cancel{background:var(--white);color:var(--dark-blue);border:1px solid var(--light-gray);}
+
+  .empty{padding:44px 20px;text-align:center;color:var(--medium-gray);background:var(--white);border:1px solid var(--light-gray);border-radius:var(--r);box-shadow:var(--shadow);}
+  .empty .big{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;color:var(--light-gray);font-size:18px;margin-bottom:6px;}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--dark-blue);color:var(--white);padding:12px 22px;font-weight:bold;font-size:13px;text-transform:uppercase;letter-spacing:0.04em;border-radius:var(--r-sm);border-left:4px solid var(--energy-blue);display:none;z-index:60;max-width:90vw;text-align:center;box-shadow:var(--shadow-lift);}
+  .toast.show{display:block;}
+
+  @media (max-width:820px){
+    :root{--rail-w:100%;}
+    .app-shell{flex-direction:column;}
+    .nav-rail{flex-direction:row;height:auto;min-height:0;position:static;padding:8px;align-items:center;gap:6px;}
+    .rail-logo{margin:0 8px 0 4px;width:38px;height:38px;flex:0 0 38px;}
+    .rail-item{flex:1;margin-bottom:0;padding:8px 4px;}
+    .rail-ic{width:18px;height:18px;margin:0 auto 4px;}
+    .rail-foot{display:none;}
+  }
+  @media (max-width:560px){ .topbar{padding:14px 16px;} main{padding:16px 16px 44px;} .topbar h1{font-size:17px;} }
+  /* ---------- optional view-only access gate (admin can require a key) ---------- */
+  .acc-wait .app-shell{visibility:hidden;}
+  #accGate{display:none;position:fixed;inset:0;z-index:9999;background:var(--dark-blue);align-items:center;justify-content:center;padding:24px;}
+  .acc-locked #accGate{display:flex;}
+  .acc-locked .app-shell{display:none;}
+  .acc-box{background:var(--white);border:1px solid var(--light-gray);border-radius:16px;max-width:420px;width:100%;
+    padding:34px 30px;box-shadow:0 10px 24px #BCBCBC;text-align:center;animation:fadeUp .4s ease both;}
+  .acc-mark{width:52px;height:52px;border-radius:14px;background:var(--light-blue);margin:0 auto 16px;position:relative;}
+  .acc-mark::before{content:"";box-sizing:border-box;position:absolute;left:17px;top:13px;width:18px;height:15px;
+    border:3px solid var(--dark-blue);border-bottom:none;border-radius:9px 9px 0 0;}
+  .acc-mark::after{content:"";box-sizing:border-box;position:absolute;left:13px;top:24px;width:26px;height:19px;background:var(--dark-blue);border-radius:4px;}
+  .acc-box h1{color:var(--dark-blue);font-size:20px;margin-bottom:8px;}
+  .acc-box p{color:var(--medium-gray);font-size:14px;margin-bottom:18px;}
+  .acc-box input{width:100%;padding:12px 14px;border:1px solid var(--light-gray);border-radius:10px;font-size:15px;
+    font-family:Arial, Helvetica, sans-serif;margin-bottom:12px;color:var(--dark-gray);}
+  .acc-box input:focus{outline:none;border-color:var(--energy-blue);}
+  .acc-btn{width:100%;font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:13px;letter-spacing:0.04em;
+    padding:12px;border:1px solid var(--dark-blue);background:var(--dark-blue);color:var(--white);border-radius:10px;cursor:pointer;transition:background .18s ease;}
+  .acc-btn:hover{background:var(--energy-blue);border-color:var(--energy-blue);}
+  .acc-err{color:#EC9522;font-size:13px;margin-top:12px;min-height:16px;}
+</style>
+  <script>try{if(!localStorage.getItem("bac_admin_key"))document.documentElement.classList.add("acc-wait");}catch(e){}</script>
+</head>
+<body>
+<div id="accGate" role="dialog" aria-modal="true" aria-label="Site access">
+  <div class="acc-box">
+    <div class="acc-mark" aria-hidden="true"></div>
+    <h1>Site access</h1>
+    <p>This portal is private. Please contact your SIS for an access key.</p>
+    <input id="accInput" type="password" inputmode="text" placeholder="Access key" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button id="accBtn" class="acc-btn">Unlock</button>
+    <div id="accErr" class="acc-err" role="alert"></div>
+  </div>
+</div>
+
+
+<div class="app-shell">
+  <nav class="nav-rail" aria-label="Primary">
+    <a class="rail-logo" href="index.html" aria-label="Blattner"><svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 400 400" style="enable-background:new 0 0 400 400;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#FFFFFF;}
+</style>
+<g>
+	<polygon class="st0" points="215.2,164.1 231.7,122.3 195,122.3 	"/>
+	<path class="st0" d="M233.4,200l0.1,0.2c0,0,0-0.1,0.1-0.1L233.4,200z"/>
+	<path class="st0" d="M233.5,200.2l20.7,24.4c7.9-3.4,13.5-8.4,17.7-15.1l-38.4-9.5C233.6,200.1,233.5,200.2,233.5,200.2"/>
+	<path class="st0" d="M278.4,128.5l-38.3,42.9l-4.3,4.8l4.9-0.2l43.1-1.6l-45.3,13.9l0,0l-0.4,0.1l0.3,0.2h0l33.6,20.9
+		c4.2-6.6,7-14.8,9.5-24.9l2.7-11C289.4,152.7,289.2,136.7,278.4,128.5"/>
+	<polygon class="st0" points="202.5,163.7 195,122.3 167.4,122.3 	"/>
+	<path class="st0" d="M254.5,122.3h-22.8l-4.3,43.1l-0.2,1.7l2.1-1.6l49-37C273.1,124.5,265.4,122.3,254.5,122.3"/>
+	<path class="st0" d="M209.6,206.5H116l8.1-33h77.5l-43-50.7H83.8L31.8,334.1h168.4c30.3,0,55.3-9.6,66.4-56
+		c6.5-27.1,1.1-43.5-19.3-50.5l-22.9-27.1C220.8,204.7,215.8,206.5,209.6,206.5 M214.8,267.8c-3,12.3-11.4,15.5-22.9,15.5H97.2
+		l8.1-33h94.8C211.5,250.3,218.3,253.5,214.8,267.8"/>
+	<polygon class="st0" points="90.2,64.6 124.9,105.6 313.3,105.7 280.2,287.9 321.4,335.4 368.2,64.7 	"/>
+</g>
+</svg></a>
+    <a class="rail-item" href="index.html"><span class="rail-ic ic-hub"></span><span class="rail-lbl">Dashboard</span></a>
+    <a class="rail-item" href="inventory.html"><span class="rail-ic ic-assets"></span><span class="rail-lbl">Assets</span></a>
+    <a class="rail-item active" href="deliveries.html"><span class="rail-ic ic-deliv"></span><span class="rail-lbl">Deliveries</span></a>
+    <a class="rail-item" href="admin.html"><span class="rail-ic ic-admin"></span><span class="rail-lbl">Admin</span></a>
+    <a class="rail-item" href="guide.html"><span class="rail-ic ic-guide"></span><span class="rail-lbl">Guide</span></a>
+    <div class="rail-foot">BEI</div>
+  </nav>
+
+  <div class="app-body">
+    <header class="topbar">
+      <div class="titles">
+        <h1>Deliveries</h1>
+        <div class="sub">Blattner &middot; Req Material Tracking</div>
+      </div>
+      <div class="spacer"></div>
+    </header>
+
+    <main>
+      <div class="adminbar">
+        <button class="btn secondary small" id="adminBtn">Admin unlock</button>
+        <span class="who" id="adminWho" style="display:none;"></span>
+      </div>
+
+      <div class="banner" id="banner"></div>
+
+      <!-- New trackers (admin) -->
+      <div id="newPanel" class="card">
+        <div class="card-head"><h2>New delivery trackers</h2></div>
+        <div class="card-body">
+          <div class="field"><label>Req export (.xlsx) <span style="color:var(--dark-blue)">*</span></label>
+            <input type="file" id="reqFile" accept=".xlsx"></div>
+          <div class="field" id="setAllWrap" style="display:none;">
+            <label>Set trade for all orders</label>
+            <select id="setAllTrade"><option value="">— choose a trade —</option></select>
+          </div>
+          <div id="preview"></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+            <button class="btn" id="createBtn" disabled>Create trackers</button>
+            <button class="btn secondary" id="backfillBtn" style="display:none;"></button>
+            <button class="btn secondary" id="cancelNew">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search"><input type="text" id="q" aria-label="Search requisitions" placeholder="Search Req #, project, part, originator…"></div>
+        <div class="seg" role="tablist">
+          <button id="segActive" aria-selected="true">Active</button>
+          <button id="segDone" aria-selected="false">Completed</button>
+        </div>
+        <button class="btn small secondary" id="filtersBtn" aria-expanded="false" aria-controls="filterbar">Filters</button>
+        <button class="btn small secondary" id="purgeLegacy" style="display:none;"></button>
+      </div>
+      <div class="filterbar" id="filterbar">
+        <span class="fgrp"><span class="flbl">Trade</span><select id="fTrade"><option value="">All trades</option></select></span>
+        <span class="fgrp"><span class="flbl">Originator</span><select id="fOriginator"><option value="">All originators</option></select></span>
+        <span class="flbl">Date</span>
+        <button type="button" class="btn small secondary" id="todayBtn">Today</button>
+        <span class="fgrp"><span class="flbl">From</span><input type="date" id="fFrom" aria-label="Required date from"></span>
+        <span class="fgrp"><span class="flbl">To</span><input type="date" id="fTo" aria-label="Required date to"></span>
+        <button type="button" class="linkbtn" id="clearFilters">Clear filters</button>
+      </div>
+
+      <div class="pager" id="pager" style="display:none;">
+        <button class="pg-btn" id="pgPrev" aria-label="Previous page">&lsaquo;</button>
+        <select id="pgSel" aria-label="Page"></select>
+        <button class="pg-btn" id="pgNext" aria-label="Next page">&rsaquo;</button>
+        <span class="pg-info" id="pgInfo"></span>
+      </div>
+
+      <div id="list"></div>
+      <div class="empty" id="empty" style="display:none;"></div>
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const WORKER_URL = "https://asset-portal.site-asset-manager.workers.dev";
+const TRADES = ["Civil","Electrical","Foundation","Collection","Install","Mechanical",
+  "Commissioning","Substation","BESS","Safety","SM/PCC","Survey","Quality","TLine","Inventory","Decom","Other"];
+const STATE = { trackers:[], state:"open", admin:false, adminName:"", pendingOrders:null, existingReqs:null, existingTrackers:null, page:1, cache:{open:null,closed:null} };
+const PAGE_SIZE = 100;
+const CREATE_PACE_MS = 1200;   // spacing between bulk creates (GitHub throttles rapid issue creation)
+const MAX_LINES = 200;         // GitHub caps an issue body at 65,536 chars; split big orders into ≤200-line trackers
+
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r=>setTimeout(r, ms));
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+let toastT=null;
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),3000); }
+function banner(msg){ const b=$("#banner"); if(!msg){b.classList.remove("show");return;} b.textContent=msg; b.classList.add("show"); }
+
+/* ---------- Excel date serial → ISO ---------- */
+function excelSerialToISO(v){
+  const s=String(v==null?"":v).trim(); if(!s) return "";
+  const n=Math.trunc(Number(s)); if(!isFinite(n)||n<=0) return "";
+  const d=new Date(Date.UTC(1899,11,30)+n*86400000);
+  return isNaN(d)?"":d.toISOString().slice(0,10);
+}
+function decodeXml(s){ return String(s).replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&#39;/g,"'"); }
+function colIndex(ref){ const m=/^([A-Z]+)/.exec(ref); let n=0; for(const ch of m[1]) n=n*26+(ch.charCodeAt(0)-64); return n-1; }
+
+/* ---------- Dependency-free xlsx reader (native DecompressionStream) ---------- */
+function readXlsxIndex(buf){
+  const dv=new DataView(buf), u8=new Uint8Array(buf), dec=new TextDecoder();
+  let eocd=-1;
+  for(let i=buf.byteLength-22;i>=0;i--){ if(dv.getUint32(i,true)===0x06054b50){ eocd=i; break; } }
+  if(eocd<0) throw new Error("Not a valid .xlsx (no zip end record)");
+  const cdOff=dv.getUint32(eocd+16,true), cdCount=dv.getUint16(eocd+10,true);
+  const entries={}; let p=cdOff;
+  for(let n=0;n<cdCount;n++){
+    if(dv.getUint32(p,true)!==0x02014b50) break;
+    const method=dv.getUint16(p+10,true), compSize=dv.getUint32(p+20,true);
+    const nameLen=dv.getUint16(p+28,true), extraLen=dv.getUint16(p+30,true), cmtLen=dv.getUint16(p+32,true);
+    const localOff=dv.getUint32(p+42,true);
+    const name=dec.decode(u8.subarray(p+46,p+46+nameLen));
+    entries[name]={method,compSize,localOff}; p+=46+nameLen+extraLen+cmtLen;
+  }
+  async function get(name){
+    const e=entries[name]; if(!e) return null;
+    const lNameLen=dv.getUint16(e.localOff+26,true), lExtraLen=dv.getUint16(e.localOff+28,true);
+    const start=e.localOff+30+lNameLen+lExtraLen;
+    const comp=u8.subarray(start,start+e.compSize);
+    if(e.method===0) return dec.decode(comp);
+    if(e.method===8){
+      if(typeof DecompressionStream==="undefined") throw new Error("This browser can't read .xlsx (no DecompressionStream) — use Chrome/Edge or recent Safari.");
+      const ab=await new Response(new Blob([comp]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer();
+      return dec.decode(new Uint8Array(ab));
+    }
+    throw new Error("Unsupported compression in .xlsx (method "+e.method+")");
+  }
+  return { names:Object.keys(entries), get };
+}
+function parseShared(xml){
+  if(!xml) return []; const out=[];
+  for(const m of xml.matchAll(/<si>([\s\S]*?)<\/si>/g)){
+    let t=""; for(const tm of m[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)) t+=tm[1];
+    out.push(decodeXml(t));
+  }
+  return out;
+}
+function sheetRows(xml, shared){
+  const rows=[];
+  for(const rm of xml.matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)){
+    const cells={}; let maxc=0;
+    for(const cm of rm[1].matchAll(/<c\s+r="([A-Z]+\d+)"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)){
+      const ref=cm[1], attrs=cm[2]||"", inner=cm[3]||"";
+      const ci=colIndex(ref); if(ci>maxc) maxc=ci;
+      const tm=/t="([^"]+)"/.exec(attrs); const ty=tm?tm[1]:""; let val="";
+      if(ty==="inlineStr"){ const im=/<t[^>]*>([\s\S]*?)<\/t>/.exec(inner); val=im?decodeXml(im[1]):""; }
+      else { const vm=/<v>([\s\S]*?)<\/v>/.exec(inner); if(vm){ val = ty==="s" ? (shared[parseInt(vm[1],10)]||"") : decodeXml(vm[1]); } }
+      cells[ci]=val;
+    }
+    const arr=[]; for(let i=0;i<=maxc;i++) arr.push(cells[i]!==undefined?cells[i]:"");
+    rows.push(arr);
+  }
+  return rows;
+}
+/* ---------- Req parser: one tracker per Order Number ----------
+   Reads the first sheet by EXACT header name (column order may vary).
+   Kept columns: Order Number (Req #), Line Number, Line Description,
+   2nd Item Number (Part #), UM, Request Date, Description Line 2.
+   Everything else is ignored; no ordered quantity is captured. */
+const REQ_COLS = { order:"Order Number", line:"Line Number", desc:"Line Description",
+  part:"2nd Item Number", uom:"UM", reqDate:"Request Date", desc2:"Description Line 2",
+  originator:"Transaction Originator", qty:"Quantity To Receive" };   /* qty -> Expected; never read Unit Cost */
+function firstSheetPath(wb, relMap){
+  const m=/<sheet\s+[^>]*r:id="([^"]+)"/.exec(wb);
+  if(!m) throw new Error("No sheet found in workbook");
+  let t=relMap[m[1]]||""; if(t && !t.startsWith("xl/")) t="xl/"+t; return t;
+}
+function cleanNum(v){ return String(v==null?"":v).trim().replace(/\.0+$/,""); }
+async function parseReqXlsx(file){
+  const zip=readXlsxIndex(await file.arrayBuffer());
+  const wb=await zip.get("xl/workbook.xml");
+  const rels=await zip.get("xl/_rels/workbook.xml.rels");
+  const shared=parseShared(await zip.get("xl/sharedStrings.xml"));
+  const relMap={};
+  for(const m of rels.matchAll(/<Relationship\s+[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"/g)) relMap[m[1]]=m[2];
+  const rows=sheetRows(await zip.get(firstSheetPath(wb,relMap))||"", shared);
+  if(!rows.length) throw new Error("The sheet is empty");
+  // Match headers case-insensitively and whitespace-normalized, so exports that
+  // drift in capitalization or extra spaces (e.g. " Request date") still map.
+  const norm=s=>String(s||"").replace(/\s+/g," ").trim().toLowerCase();
+  const hdrRaw=rows[0].map(x=>String(x||"").trim());
+  const hdrNorm=hdrRaw.map(norm);
+  const col=name=>hdrNorm.indexOf(norm(name));
+  const iOrder=col(REQ_COLS.order);
+  if(iOrder<0) throw new Error('Header "'+REQ_COLS.order+'" not found. Headers: '+(hdrRaw.filter(Boolean).join(", ")||"(none)"));
+  const iLine=col(REQ_COLS.line), iDesc=col(REQ_COLS.desc), iPart=col(REQ_COLS.part),
+        iUom=col(REQ_COLS.uom), iReq=col(REQ_COLS.reqDate), iD2=col(REQ_COLS.desc2),
+        iOrig=col(REQ_COLS.originator), iQty=col(REQ_COLS.qty);
+  const byOrder=new Map(), byOrig=new Map();
+  for(let r=1;r<rows.length;r++){
+    const row=rows[r];
+    const order=cleanNum(iOrder>=0?row[iOrder]:"");
+    if(!order) continue;
+    const d1=iDesc>=0?String(row[iDesc]||"").trim():"";
+    const d2=iD2>=0?String(row[iD2]||"").trim():"";
+    const part=iPart>=0?String(row[iPart]||"").trim():"";
+    const lnRaw=iLine>=0?cleanNum(row[iLine]):"";
+    const qRaw=iQty>=0?cleanNum(row[iQty]):"";
+    const line={ line: lnRaw!==""?(parseInt(lnRaw,10)||lnRaw):"", part,
+      desc:d1+(d2?(" "+d2):""), uom:iUom>=0?String(row[iUom]||"").trim():"",
+      requiredDate:iReq>=0?excelSerialToISO(row[iReq]):"",
+      expected:(qRaw!=="" && isFinite(Number(qRaw)))?Number(qRaw):null };   /* prefill Expected from the file when present */
+    if(!line.desc && !part && line.line==="") continue;
+    const orig=iOrig>=0?String(row[iOrig]||"").trim():"";
+    if(orig && !byOrig.get(order)) byOrig.set(order, orig);   // first non-empty originator per order
+    if(!byOrder.has(order)) byOrder.set(order, []);
+    byOrder.get(order).push(line);
+  }
+  const orders=[...byOrder.entries()].map(([reqNumber,lines])=>({reqNumber, trade:"", lines, excluded:false, originator:byOrig.get(reqNumber)||""}));
+  orders.sort((a,b)=>String(a.reqNumber).localeCompare(String(b.reqNumber),undefined,{numeric:true}));
+  if(!orders.length) throw new Error("No order rows found (every row was missing an Order Number).");
+  return orders;   /* NOTE: no cost/quantity field is ever produced */
+}
+
+/* ---------- admin (real key wired in Task 4; here it unlocks the UI) ---------- */
+function setAdmin(on){
+  STATE.admin=on;
+  $("#adminBtn").style.display=on?"none":"inline-flex";
+  $("#adminWho").style.display=on?"inline":"none";
+  $("#adminWho").textContent=on?("Admin: "+STATE.adminName):"";
+  if(!on){ $("#newPanel").classList.remove("show"); }
+  render();
+}
+function adminUnlock(){
+  const name=prompt("Your name (shown on updates):"); if(name===null) return;
+  const key=prompt("Admin key:"); if(key===null) return;
+  STATE.adminName=name.trim()||"admin";
+  localStorage.setItem("bac_admin_name", STATE.adminName);
+  localStorage.setItem("bac_admin_key", key.trim());
+  setAdmin(true);
+  toast("Admin unlocked");
+}
+
+/* ---------- new trackers (one per order, admin assigns a trade to each) ---------- */
+/* Existing trackers (open + closed) — used to skip orders already tracked and to
+   backfill newly-mapped fields (e.g. originator) onto trackers created earlier. */
+async function fetchExistingTrackers(){
+  const all=[];
+  for(const st of ["open","closed"]){
+    try{ const r=await fetch(wbase()+"/reqs?state="+st); if(!r.ok) continue;
+      const d=await r.json(); (d.trackers||[]).forEach(t=>all.push(t)); }catch(e){}
+  }
+  return all;
+}
+function orderExists(o){ return !!(STATE.existingReqs && STATE.existingReqs.has(String(o.reqNumber))); }
+/* Existing trackers that match a parsed order carrying an originator the tracker
+   is still missing — the "backfill" set. Returns [{issue, trade, requisitioner}]. */
+function backfillCandidates(){
+  if(!STATE.pendingOrders || !STATE.existingTrackers) return [];
+  const origByReq=new Map();
+  STATE.pendingOrders.forEach(o=>{ if(o.originator) origByReq.set(String(o.reqNumber), o.originator); });
+  const out=[];
+  STATE.existingTrackers.forEach(t=>{
+    const fileOrig=origByReq.get(String(t.reqNumber));
+    const cur=(t.marker && t.marker.requisitioner) || "";
+    if(fileOrig && fileOrig!==cur) out.push({ issue:t.issue, trade:t.trade, requisitioner:fileOrig });
+  });
+  return out;
+}
+function ordTradeSelect(idx, val){
+  return '<select class="ordtrade" data-idx="'+idx+'"><option value="">Trade…</option>'+
+    TRADES.map(t=>'<option value="'+t+'"'+(t===val?' selected':'')+'>'+t+'</option>').join("")+'</select>';
+}
+function renderPreview(){
+  const orders=STATE.pendingOrders, el=$("#preview");
+  if(!orders){ el.innerHTML=""; $("#setAllWrap").style.display="none"; $("#createBtn").disabled=true; $("#createBtn").textContent="Create trackers"; return; }
+  $("#setAllWrap").style.display="block";
+  const totalLines=orders.reduce((s,o)=>s+o.lines.length,0);
+  const dupes=orders.filter(orderExists).length;
+  const excluded=orders.filter(o=>!orderExists(o)&&o.excluded).length;
+  const rows=orders.map((o,i)=>{
+    if(orderExists(o)) return "";   // hide already-tracked orders from the list (still counted in the summary)
+    const linesTbl='<div class="ord-lines"><table><thead><tr><th>Line</th><th>Part #</th><th>Description</th><th>UoM</th><th>Required</th><th>Expected</th></tr></thead><tbody>'+
+      o.lines.map(l=>'<tr><td>'+esc(l.line)+'</td><td>'+esc(l.part||"")+'</td><td>'+esc(l.desc)+'</td><td>'+esc(l.uom||"")+'</td><td>'+esc(l.requiredDate||"")+'</td><td>'+(l.expected==null?"—":esc(l.expected))+'</td></tr>').join("")+
+      '</tbody></table></div>';
+    let controls, cls;
+    if(o.excluded){ controls='<span class="badge">Excluded</span><button type="button" class="ord-ex" data-exclude="'+i+'">Include</button>'; cls=' excluded'; }
+    else { controls=ordTradeSelect(i, o.trade)+'<button type="button" class="ord-ex" data-exclude="'+i+'">Exclude</button>'; cls=(o.trade?' ready':''); }
+    return '<div class="ordrow'+cls+'" data-row="'+i+'">'+
+      '<div class="ord-head">'+
+        '<span class="req">Req '+esc(o.reqNumber)+'</span>'+
+        '<span class="meta">'+o.lines.length+' line'+(o.lines.length===1?'':'s')+(orderChunks(o)>1?(' &middot; splits into '+orderChunks(o)+' trackers'):'')+'</span>'+
+        '<button type="button" class="ord-view" data-view="'+i+'">View lines</button>'+
+        controls+
+      '</div>'+linesTbl+
+    '</div>';
+  }).join("");
+  const newCount=orders.length-dupes-excluded;
+  el.innerHTML='<div class="ordsum">'+orders.length+' order'+(orders.length===1?'':'s')+' &middot; '+totalLines+' lines &middot; '+
+    newCount+' to create'+(dupes?(' &middot; '+dupes+' already tracked (skipped)'):'')+(excluded?(' &middot; '+excluded+' excluded'):'')+' &middot; assign a trade to each'+
+    '<button type="button" class="ord-view" id="expandAll">Expand all</button></div>'+rows;
+  updateCreateEnabled();
+}
+function newOrders(){ return (STATE.pendingOrders||[]).filter(o=>!orderExists(o) && !o.excluded); }
+function orderChunks(o){ return Math.max(1, Math.ceil((o.lines.length||0)/MAX_LINES)); }
+/* Split one order into ≤MAX_LINES tracker payloads (large orders exceed GitHub's
+   65,536-char issue body). Chunks share the Req # (so re-imports still skip it)
+   and carry a "Part i of N" label. */
+function chunkOrder(o){
+  const n=orderChunks(o), req=o.originator||"";
+  if(n<=1) return [{ reqNumber:o.reqNumber, trade:o.trade, project:o.project||"", requisitioner:req, lines:o.lines }];
+  const out=[];
+  for(let i=0;i<n;i++){
+    out.push({ reqNumber:o.reqNumber, trade:o.trade, requisitioner:req,
+      project:(o.project?o.project+" · ":"")+"Part "+(i+1)+" of "+n,
+      lines:o.lines.slice(i*MAX_LINES,(i+1)*MAX_LINES) });
+  }
+  return out;
+}
+function plannedTrackerCount(){ return newOrders().reduce((s,o)=>s+orderChunks(o),0); }
+function updateCreateEnabled(){
+  const nw=newOrders();
+  const ready=nw.length && nw.every(o=>TRADES.includes(o.trade));
+  const n=plannedTrackerCount();
+  $("#createBtn").disabled=!ready;
+  $("#createBtn").textContent = nw.length? ("Create "+n+" tracker"+(n===1?"":"s")) : "No new orders";
+  const bf=$("#backfillBtn"), bc=backfillCandidates().length;
+  if(bf){ if(bc){ bf.style.display="inline-flex"; bf.textContent="Backfill originator on "+bc+" tracked"; } else bf.style.display="none"; }
+}
+const wbase = () => WORKER_URL.replace(/\/$/,"");
+function adminKey(){ return localStorage.getItem("bac_admin_key")||""; }
+async function createTracker(payload){
+  try{
+    const r=await fetch(wbase()+"/req",{method:"POST",headers:{"Content-Type":"application/json","x-admin-key":adminKey()},body:JSON.stringify(payload)});
+    if(!r.ok){ const e=await r.json().catch(()=>({})); return {ok:false,error:e.error||("HTTP "+r.status)}; }
+    return await r.json();
+  }catch(err){ return {ok:false,error:err.message}; }
+}
+/* Cache each tab's list so toggling Active/Completed is instant; a mutation
+   invalidates it so the next visit refetches. */
+function invalidateCache(){ STATE.cache.open=null; STATE.cache.closed=null; }
+async function loadTrackers(force){
+  if(!force && STATE.cache[STATE.state]){ STATE.trackers=STATE.cache[STATE.state]; banner(""); return; }
+  try{
+    const r=await fetch(wbase()+"/reqs?state="+STATE.state);
+    if(!r.ok){ STATE.trackers=[]; banner("Could not load trackers (HTTP "+r.status+")"); return; }
+    const d=await r.json(); STATE.trackers=d.trackers||[]; STATE.cache[STATE.state]=STATE.trackers; banner("");
+  }catch(err){ STATE.trackers=[]; banner("Offline — could not load trackers."); }
+}
+async function logEvent(issue, line, kind, qty, by){
+  const r=await fetch(wbase()+"/req/deliver",{method:"POST",headers:{"Content-Type":"application/json","x-admin-key":adminKey()},
+    body:JSON.stringify({issue, line, kind, qty:Number(qty), by:by||"", loggedBy:STATE.adminName})});
+  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||("HTTP "+r.status)); }
+  return await r.json();
+}
+async function editPickup(issue, line, index, qty){
+  const r=await fetch(wbase()+"/req/deliver",{method:"POST",headers:{"Content-Type":"application/json","x-admin-key":adminKey()},
+    body:JSON.stringify({issue, line, kind:"editpickup", index, qty:Number(qty), loggedBy:STATE.adminName})});
+  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||("HTTP "+r.status)); }
+  return await r.json();
+}
+/* Correct the Expected value (absolute set — same as the old "Set" control). */
+async function editExpected(issue, line, qty){
+  const r=await fetch(wbase()+"/req/deliver",{method:"POST",headers:{"Content-Type":"application/json","x-admin-key":adminKey()},
+    body:JSON.stringify({issue, line, kind:"expected", qty:Number(qty), loggedBy:STATE.adminName})});
+  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||("HTTP "+r.status)); }
+  return await r.json();
+}
+/* Correct the Delivered total by logging the adjusting difference (uses the
+   existing "delivered" action, so no Worker change is needed). */
+async function adjustDelivered(issue, line, delta){
+  const r=await fetch(wbase()+"/req/deliver",{method:"POST",headers:{"Content-Type":"application/json","x-admin-key":adminKey()},
+    body:JSON.stringify({issue, line, kind:"delivered", qty:Number(delta), loggedBy:STATE.adminName})});
+  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||("HTTP "+r.status)); }
+  return await r.json();
+}
+async function deleteReq(issue){
+  const r=await fetch(wbase()+"/req/delete",{method:"POST",headers:{"Content-Type":"application/json","x-admin-key":adminKey()},
+    body:JSON.stringify({issue})});
+  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||("HTTP "+r.status)); }
+  return await r.json();
+}
+async function completeReq(issue){
+  const r=await fetch(wbase()+"/req/complete",{method:"POST",headers:{"Content-Type":"application/json","x-admin-key":adminKey()},
+    body:JSON.stringify({issue})});
+  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||("HTTP "+r.status)); }
+  return await r.json();
+}
+async function setTradeReq(issue, trade, requisitioner){
+  const payload={issue, trade}; if(requisitioner!=null) payload.requisitioner=requisitioner;
+  const r=await fetch(wbase()+"/req/trade",{method:"POST",headers:{"Content-Type":"application/json","x-admin-key":adminKey()},
+    body:JSON.stringify(payload)});
+  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||("HTTP "+r.status)); }
+  return await r.json();
+}
+function lineDelivered(l){ return (l.deliveries||[]).reduce((s,d)=>s+(Number(d.qty)||0),0); }
+function linePickedUp(l){ return (l.pickups||[]).reduce((s,p)=>s+(Number(p.qty)||0),0); }
+function lineExpected(l){ return (l && l.expected!=null && l.expected!=="") ? Number(l.expected) : null; }
+function linePending(l){ const e=lineExpected(l); return e==null ? null : Math.max(0, e - lineDelivered(l)); }
+function lineStatus(delivered, picked){
+  if(delivered<=0 && picked<=0) return "Not started";
+  if(picked>0 && picked>=delivered) return "Picked up";
+  if(picked>0) return "Partial pickup";
+  return "On site";
+}
+function statusClass(s){ return s==="Picked up"?"st-complete":((s==="On site"||s==="Partial pickup")?"st-onsite":"st-none"); }
+function linePickPct(delivered, picked){ if(delivered<=0) return picked>0?100:0; return Math.max(0,Math.min(100,Math.round(100*picked/delivered))); }
+/* Required-date urgency: overdue = past due and nothing on site yet; due soon = within 3 days and not on site. */
+function daysUntil(iso){ if(!iso) return null; const d=new Date(iso+"T00:00:00"); if(isNaN(d)) return null;
+  const n=new Date(); const t=new Date(n.getFullYear(),n.getMonth(),n.getDate()); return Math.round((d-t)/86400000); }
+function lineOverdue(l){ const du=daysUntil(l.requiredDate); return du!==null && du<0 && lineDelivered(l)<=0; }
+function lineDueSoon(l){ const du=daysUntil(l.requiredDate); return du!==null && du>=0 && du<=3 && lineDelivered(l)<=0; }
+function trackerOverdue(t){ return ((t.marker&&t.marker.lines)||[]).some(lineOverdue); }
+/* Legacy = old-format tracker created before the 3-event Worker (no part/pickups on its lines). */
+function isLegacy(t){ const ls=(t.marker&&t.marker.lines)||[]; return ls.length>0 && ls.every(l=>!("pickups" in l) && !("part" in l)); }
+
+/* ---------- progress ring (chart svg) ---------- */
+function ringSvg(pct){
+  const p=Math.max(0,Math.min(100,pct));
+  return '<div class="ring-wrap"><svg class="chart ring" viewBox="0 0 48 48" aria-hidden="true">'+
+    '<circle cx="24" cy="24" r="20" fill="none" stroke="#B9E5FB" stroke-width="5"></circle>'+
+    '<circle class="ring-fg" cx="24" cy="24" r="20" fill="none" stroke="#2DA2DB" stroke-width="5" stroke-linecap="round" '+
+      'stroke-dasharray="125.66" stroke-dashoffset="125.66" data-pct="'+p+'" transform="rotate(-90 24 24)"></circle>'+
+    '</svg><div class="ring-val">'+p+'%</div></div>';
+}
+function animateProgress(root){
+  requestAnimationFrame(()=>{
+    (root||document).querySelectorAll(".ring-fg").forEach(el=>{
+      const p=Number(el.getAttribute("data-pct"))||0;
+      el.style.strokeDashoffset=(125.66*(1-p/100)).toFixed(1);
+    });
+    (root||document).querySelectorAll(".lmeter>span").forEach(el=>{
+      el.style.width=(Number(el.getAttribute("data-w"))||0)+"%";
+    });
+  });
+}
+
+/* ---------- render trackers ---------- */
+function trackerOriginator(t){ return (t.marker && t.marker.requisitioner) || ""; }
+/* Any line whose required date falls in the inclusive [from,to] range (ISO strings). */
+function trackerInDateRange(t, from, to){ return ((t.marker&&t.marker.lines)||[]).some(l=>{ const d=l.requiredDate; if(!d) return false; if(from && d<from) return false; if(to && d>to) return false; return true; }); }
+function todayISO(){ const n=new Date(), p=x=>String(x).padStart(2,"0"); return n.getFullYear()+"-"+p(n.getMonth()+1)+"-"+p(n.getDate()); }
+function viewTrackers(){
+  const q=$("#q").value.trim().toLowerCase(), tf=$("#fTrade").value, of=$("#fOriginator").value;
+  const from=$("#fFrom").value, to=$("#fTo").value;
+  let v=STATE.trackers.slice();
+  if(tf) v=v.filter(t=>t.trade===tf);
+  if(of) v=v.filter(t=>trackerOriginator(t)===of);
+  if(from||to) v=v.filter(t=>trackerInDateRange(t, from, to));
+  if(q) v=v.filter(t=>[t.reqNumber,t.project,t.description,t.trade,trackerOriginator(t)].some(x=>String(x||"").toLowerCase().includes(q)));
+  return v;
+}
+function activeFilterCount(){
+  const range=($("#fFrom").value||$("#fTo").value)?1:0;
+  return [$("#fTrade").value,$("#fOriginator").value].filter(Boolean).length + range;
+}
+function updateFiltersBtn(){
+  const btn=$("#filtersBtn"); if(!btn) return;
+  const n=activeFilterCount();
+  btn.textContent = n? ("Filters · "+n) : "Filters";
+  btn.classList.toggle("on", n>0);
+}
+/* Populate the originator filter from the distinct originators in the current list. */
+function fillOriginatorFilter(){
+  const sel=$("#fOriginator"); if(!sel) return;
+  const cur=sel.value;
+  const names=[...new Set(STATE.trackers.map(trackerOriginator).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  sel.innerHTML='<option value="">All originators</option>'+names.map(n=>'<option value="'+esc(n)+'"'+(n===cur?' selected':'')+'>'+esc(n)+'</option>').join("");
+  if(names.includes(cur)) sel.value=cur; else sel.value="";
+}
+/* Branded, print-optimized pickup sheet for one tracker (new window → print). */
+function printSheet(t){
+  const m=t.marker||{}; const lines=m.lines||[];
+  const rowsHtml=lines.map(l=>{
+    const d=lineDelivered(l), p=linePickedUp(l), st=lineStatus(d,p), ov=lineOverdue(l), e=lineExpected(l), pend=linePending(l);
+    return `<tr><td>${esc(l.line)}</td><td>${esc(l.part||"")}</td><td>${esc(l.desc||"")}</td><td>${esc(l.uom||"")}</td>`+
+      `<td${ov?' class="ov"':''}>${esc(l.requiredDate||"")}</td><td>${e==null?"":esc(e)}</td><td>${esc(d)}</td><td>${pend==null?"":esc(pend)}</td><td>${esc(p)}</td><td>${esc(st)}</td><td class="blank"></td></tr>`;
+  }).join("");
+  const today=new Date().toISOString().slice(0,10);
+  const doc=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Req ${esc(t.reqNumber)} — Pickup sheet</title><style>`+
+    `*{box-sizing:border-box;margin:0;padding:0;}`+
+    `body{font-family:Arial, Helvetica, sans-serif;color:#333333;padding:28px;}`+
+    `.hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #02568A;padding-bottom:10px;margin-bottom:16px;}`+
+    `.wm{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;color:#02568A;font-size:22px;letter-spacing:0.02em;}`+
+    `.sub{font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#76777B;font-weight:bold;}`+
+    `h1{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;color:#02568A;font-size:18px;margin-bottom:2px;}`+
+    `.meta{font-size:12px;color:#76777B;margin-bottom:14px;}`+
+    `table{width:100%;border-collapse:collapse;font-size:11px;}`+
+    `th{background:#02568A;color:#FFFFFF;text-transform:uppercase;font-size:9px;letter-spacing:0.05em;text-align:left;padding:7px 8px;}`+
+    `td{padding:7px 8px;border-bottom:1px solid #BCBCBC;vertical-align:top;}`+
+    `td.ov{color:#EC9522;font-weight:bold;}`+
+    `td.blank{min-width:130px;}`+
+    `tbody tr:nth-child(even){background:#F2F2F2;}`+
+    `.sign{margin-top:30px;font-size:11px;color:#76777B;display:flex;gap:44px;}`+
+    `.sign div{flex:1;border-top:1px solid #333333;padding-top:5px;}`+
+    `.foot{margin-top:22px;font-size:9px;color:#BCBCBC;text-transform:uppercase;letter-spacing:0.06em;}`+
+    `@media print{body{padding:0;}}`+
+    `</style></head><body>`+
+    `<div class="hd"><div><div class="wm">Blattner</div><div class="sub">Site Inventory Portal</div></div><div class="sub">Printed ${today}</div></div>`+
+    `<h1>Req ${esc(t.reqNumber)} &middot; ${esc(t.trade||"")}</h1>`+
+    `<div class="meta">${t.project?esc(t.project)+" &middot; ":""}${lines.length} line${lines.length===1?"":"s"} &middot; ${t.linesComplete}/${t.linesTotal} picked up</div>`+
+    `<table><thead><tr><th>Line</th><th>Part #</th><th>Description</th><th>UoM</th><th>Required</th><th>Expected</th><th>Delivered</th><th>Pending</th><th>Picked up</th><th>Status</th><th>Picked up by / date</th></tr></thead><tbody>${rowsHtml}</tbody></table>`+
+    `<div class="sign"><div>Received by (print &amp; sign)</div><div>Date</div></div>`+
+    `<div class="foot">Blattner Site Inventory Portal &middot; internal use</div>`+
+    `</body></html>`;
+  const win=window.open("","_blank");
+  if(!win){ toast("Allow pop-ups to print"); return; }
+  win.document.write(doc); win.document.close(); win.focus();
+  setTimeout(()=>{ try{ win.print(); }catch(e){} }, 350);
+}
+function updatePurgeBtn(){
+  const pb=$("#purgeLegacy"); if(!pb) return;
+  const legacy = (STATE.admin && STATE.state==="open") ? STATE.trackers.filter(isLegacy) : [];
+  if(legacy.length){ pb.style.display="inline-flex"; pb.textContent="Purge "+legacy.length+" legacy"; }
+  else { pb.style.display="none"; }
+}
+function render(){
+  updatePurgeBtn();
+  fillOriginatorFilter();
+  updateFiltersBtn();
+  const list=$("#list"), empty=$("#empty"), v=viewTrackers();
+  if(!STATE.trackers.length){
+    list.innerHTML=""; empty.style.display="block"; renderPager(0,1,0,0);
+    empty.innerHTML='<div class="big">No '+(STATE.state==="open"?"active":"completed")+' trackers</div><div>'+(STATE.admin?"Use “New tracker” to add one.":"Nothing here yet.")+'</div>';
+    return;
+  }
+  if(!v.length){ list.innerHTML=""; empty.style.display="block"; renderPager(0,1,0,0); empty.innerHTML='<div class="big">No matches</div><div>Adjust search or trade filter.</div>'; return; }
+  empty.style.display="none";
+  const total=v.length, pages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+  if(STATE.page>pages) STATE.page=pages; if(STATE.page<1) STATE.page=1;
+  const start=(STATE.page-1)*PAGE_SIZE, pageItems=v.slice(start, start+PAGE_SIZE);
+  list.innerHTML=pageItems.map(renderTracker).join("");
+  animateProgress(list);
+  renderPager(total, pages, start, pageItems.length);
+}
+function renderPager(total, pages, start, shown){
+  const pager=$("#pager"); if(!pager) return;
+  if(!total){ pager.style.display="none"; return; }
+  pager.style.display="flex";
+  const sel=$("#pgSel"); let opts="";
+  for(let i=1;i<=pages;i++){ const s=(i-1)*PAGE_SIZE+1, e=Math.min(i*PAGE_SIZE,total); opts+='<option value="'+i+'"'+(i===STATE.page?' selected':'')+'>'+s+'–'+e+'</option>'; }
+  sel.innerHTML=opts; sel.disabled=pages<=1;
+  $("#pgPrev").disabled=STATE.page<=1; $("#pgNext").disabled=STATE.page>=pages;
+  $("#pgInfo").textContent="Records "+(start+1)+"–"+(start+shown)+" of "+total;
+}
+function gotoPage(n){ STATE.page=n; render(); const l=$("#list"); if(l) l.scrollIntoView({block:"start"}); }
+function renderTracker(t){
+  const pct=t.linesTotal?Math.round(100*t.linesComplete/t.linesTotal):0;
+  const rows=((t.marker&&t.marker.lines)||[]).map(l=>{
+    const d=lineDelivered(l), p=linePickedUp(l), st=lineStatus(d,p), lp=linePickPct(d,p), e=lineExpected(l), pend=linePending(l);
+    const canEditPk = STATE.admin && STATE.state==="open";
+    const pb=(l.pickups||[]).map((x,xi)=>{
+      const label=esc(x.by||"")+" ("+esc(x.qty)+(x.date?(" · "+esc(x.date)):"")+")";
+      if(!canEditPk) return '<div class="pkline">'+label+'</div>';
+      return '<div class="pk" data-pk="'+t.issue+'|'+esc(l.line)+'|'+xi+'">'+
+        '<span class="pk-view">'+label+' <button type="button" class="pk-edit">Edit</button></span>'+
+        '<span class="pk-form"><input class="pk-q" type="text" inputmode="decimal" value="'+esc(x.qty)+'"><button type="button" class="pk-save">Save</button><button type="button" class="pk-cancel">Cancel</button></span>'+
+      '</div>';
+    }).join("");
+    const meter='<div class="lmeter'+(st==="Picked up"?" done":"")+'"><span data-w="'+lp+'"></span></div>';
+    const admin = STATE.admin && STATE.state==="open"
+      ? '<td class="logcell">'+
+          '<div class="ev"><span class="evlbl">Deliver</span><input class="dqty" type="text" inputmode="decimal" style="width:64px" placeholder="qty"><button class="btn small" data-ev="delivered|'+t.issue+'|'+esc(l.line)+'">Log</button></div>'+
+          '<div class="ev"><span class="evlbl">Pickup</span><input class="pqty" type="text" inputmode="decimal" style="width:64px" placeholder="qty"><input class="pby" type="text" style="width:92px" placeholder="picked up by"><button class="btn small" data-ev="pickup|'+t.issue+'|'+esc(l.line)+'">Log</button></div>'+
+        '</td>'
+      : '';
+    // Intentional inline edit (Edit -> change -> Save), same pattern as pickup entries.
+    const editChip=(attr, disp, val)=>
+      '<div class="pk" '+attr+'><span class="pk-view">'+disp+' <button type="button" class="pk-edit">Edit</button></span>'+
+      '<span class="pk-form"><input class="pk-q" type="text" inputmode="decimal" value="'+val+'"><button type="button" class="pk-save">Save</button><button type="button" class="pk-cancel">Cancel</button></span></div>';
+    const ov=lineOverdue(l), ds=lineDueSoon(l);
+    const reqCell='<td class="'+(ov?"rd-over":(ds?"rd-soon":""))+'">'+esc(l.requiredDate||"")+
+      (ov?'<span class="rd-tag">Overdue</span>':(ds?'<span class="rd-tag soon">Due soon</span>':''))+'</td>';
+    const expCell='<td>'+(canEditPk
+      ? editChip('data-ex="'+t.issue+'|'+esc(l.line)+'"', (e==null?"—":esc(e)), (e==null?"":esc(e)))
+      : (e==null?"—":esc(e)))+'</td>';
+    const delCell='<td>'+(canEditPk
+      ? editChip('data-de="'+t.issue+'|'+esc(l.line)+'" data-cur="'+esc(d)+'"', esc(d), esc(d))
+      : esc(d))+'</td>';
+    const pendCell='<td'+((pend!=null&&pend>0)?' class="rd-over"':'')+'>'+(pend==null?"—":esc(pend))+'</td>';
+    return '<tr><td>'+esc(l.line)+'</td><td>'+esc(l.part||"")+'</td><td>'+esc(l.desc)+'</td><td>'+esc(l.uom)+'</td>'+reqCell+expCell+delCell+pendCell+'<td>'+esc(p)+meter+'</td><td class="meta pickedby">'+pb+'</td><td class="'+statusClass(st)+'">'+st+'</td>'+admin+'</tr>';
+  }).join("");
+  const adminHead = STATE.admin && STATE.state==="open" ? '<th>Log delivery / pickup</th>' : '';
+  const isDone = STATE.state==="closed";
+  const overBadge = (!isDone && trackerOverdue(t)) ? ' <span class="badge over">Overdue</span>' : '';
+  const doneBadge = isDone ? ' <span class="badge done">Completed</span>' : '';
+  const completeBtn = (STATE.admin && !isDone) ? '<button class="btn small secondary" data-complete="'+t.issue+'">Mark complete</button>' : '';
+  const orig = trackerOriginator(t);
+  const tradeOpts = TRADES.concat(TRADES.includes(t.trade)?[]:[t.trade]).map(tr=>'<option value="'+esc(tr)+'"'+(tr===t.trade?' selected':'')+'>'+esc(tr)+'</option>').join("");
+  const tradeCtl = STATE.admin
+    ? '<select class="trkTrade" data-issue="'+t.issue+'" aria-label="Trade">'+tradeOpts+'</select>'
+    : '<span class="badge">'+esc(t.trade)+'</span>';
+  const origMeta = orig ? '<span class="meta orig">By '+esc(orig)+'</span>' : '';
+  return '<div class="trk'+(isDone?' done':'')+'" data-issue="'+t.issue+'">'+
+    '<div class="top" data-toggle="'+t.issue+'"><span class="req">Req '+esc(t.reqNumber)+'</span> '+tradeCtl+overBadge+doneBadge+' '+
+      (t.project?'<span class="meta">'+esc(t.project)+'</span>':'')+origMeta+
+      '<span class="prog"><span class="lines">'+t.linesComplete+'/'+t.linesTotal+' picked up</span>'+ringSvg(pct)+'</span>'+completeBtn+'</div>'+
+    '<div class="detail"><div class="table-scroll"><table><thead><tr><th>Line</th><th>Part #</th><th>Description</th><th>UoM</th><th>Required</th><th>Expected</th><th>Delivered</th><th>Pending</th><th>Picked up</th><th>Picked up by</th><th>Status</th>'+adminHead+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+      '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">'+
+      '<button class="btn small secondary" data-print="'+t.issue+'">Print sheet</button>'+
+      (STATE.admin?'<button class="btn small secondary" data-delete="'+t.issue+'">Delete order</button>':'')+
+      '</div></div></div>';
+}
+
+/* ---------- boot ---------- */
+function initTrades(){ const f=$("#fTrade"), sa=$("#setAllTrade");
+  TRADES.forEach(t=>{ const o=document.createElement("option");o.value=t;o.textContent=t;f.appendChild(o);
+    const o2=document.createElement("option");o2.value=t;o2.textContent=t;sa.appendChild(o2); }); }
+function resetNewPanel(){ STATE.pendingOrders=null; STATE.existingReqs=null; $("#reqFile").value=""; $("#setAllTrade").value=""; renderPreview(); }
+function bind(){
+  $("#adminBtn").addEventListener("click", adminUnlock);
+  $("#cancelNew").addEventListener("click", ()=>{ $("#newPanel").classList.remove("show"); resetNewPanel(); });
+  $("#reqFile").addEventListener("change", async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    try{ toast("Reading file…"); STATE.pendingOrders=await parseReqXlsx(f); renderPreview();
+      STATE.existingTrackers=await fetchExistingTrackers();
+      STATE.existingReqs=new Set(STATE.existingTrackers.map(t=>String(t.reqNumber)));   // flag already-tracked orders
+      renderPreview();
+      toast("Parsed "+STATE.pendingOrders.length+" order"+(STATE.pendingOrders.length===1?"":"s")); }
+    catch(err){ STATE.pendingOrders=null; renderPreview(); banner("Could not read file: "+err.message); }
+  });
+  $("#setAllTrade").addEventListener("change", e=>{
+    const v=e.target.value; if(!v||!STATE.pendingOrders) return;
+    STATE.pendingOrders.forEach(o=>{ if(!orderExists(o) && !o.excluded) o.trade=v; }); renderPreview();
+  });
+  $("#preview").addEventListener("change", e=>{
+    const sel=e.target.closest(".ordtrade"); if(!sel||!STATE.pendingOrders) return;
+    const i=Number(sel.getAttribute("data-idx")); STATE.pendingOrders[i].trade=sel.value;
+    const row=sel.closest(".ordrow"); if(row) row.classList.toggle("ready", TRADES.includes(sel.value));
+    updateCreateEnabled();
+  });
+  $("#preview").addEventListener("click", e=>{
+    const ex=e.target.closest("[data-exclude]");
+    if(ex){
+      const i=Number(ex.getAttribute("data-exclude"));
+      if(STATE.pendingOrders && STATE.pendingOrders[i]){ STATE.pendingOrders[i].excluded=!STATE.pendingOrders[i].excluded; renderPreview(); }
+      return;
+    }
+    if(e.target.closest("#expandAll")){
+      const btn=e.target.closest("#expandAll");
+      const anyClosed=!!$("#preview .ordrow:not(.open)");
+      $("#preview").querySelectorAll(".ordrow").forEach(r=>r.classList.toggle("open", anyClosed));
+      $("#preview").querySelectorAll(".ord-view[data-view]").forEach(v=>v.textContent=anyClosed?"Hide lines":"View lines");
+      btn.textContent=anyClosed?"Collapse all":"Expand all";
+      return;
+    }
+    const v=e.target.closest(".ord-view[data-view]"); if(!v) return;
+    const row=v.closest(".ordrow"); if(row){ const open=row.classList.toggle("open"); v.textContent=open?"Hide lines":"View lines"; }
+  });
+  $("#createBtn").addEventListener("click", async ()=>{
+    const orders=newOrders();
+    if(!orders.length){ toast("No new orders to create"); return; }
+    if(!orders.every(o=>TRADES.includes(o.trade))){ toast("Assign a trade to every new order"); return; }
+    $("#createBtn").disabled=true;
+    // Large orders exceed GitHub's 65,536-char issue body, so split them into
+    // ≤MAX_LINES tracker "chunks". Pace the batch and retry throttled creates.
+    // An order is marked tracked only when ALL its chunks succeed, so a re-run
+    // resumes any that didn't (GitHub also caps content creation at ~500/hour).
+    const jobs=[]; orders.forEach(o=>chunkOrder(o).forEach(payload=>jobs.push({o, payload})));
+    let ok=0, fail=0; const created=[]; const orderFail=new Map();
+    for(let i=0;i<jobs.length;i++){
+      const {o,payload}=jobs[i];
+      banner("Creating "+(i+1)+" of "+jobs.length+"…  ("+ok+" done"+(fail?", "+fail+" failed":"")+")");
+      let res=null;
+      for(let attempt=0; attempt<4; attempt++){
+        if(attempt>0) await sleep(3000*Math.pow(2,attempt-1));   // 3s, 6s, 12s backoff on throttle
+        res=await createTracker(payload);
+        if(res.ok) break;
+      }
+      if(res && res.ok){ ok++; if(res.tracker) created.push(res.tracker); }
+      else { fail++; orderFail.set(o,(orderFail.get(o)||0)+1); }
+      if(i < jobs.length-1) await sleep(CREATE_PACE_MS);
+    }
+    orders.forEach(o=>{ if(!orderFail.get(o) && STATE.existingReqs) STATE.existingReqs.add(String(o.reqNumber)); });
+    created.reverse().forEach(tr=>STATE.trackers.unshift(tr));
+    invalidateCache();
+    STATE.state="open"; STATE.page=1; $("#segActive").setAttribute("aria-selected","true"); $("#segDone").setAttribute("aria-selected","false");
+    $("#createBtn").disabled=false;
+    if(fail){
+      // keep the panel open; fully-created orders now drop off as "already tracked"
+      renderPreview();
+      banner("Created "+ok+" tracker"+(ok===1?"":"s")+", "+fail+" could not be created. Wait a moment, then click Create again to retry the rest — already-created orders are skipped.");
+    } else {
+      banner(""); $("#newPanel").classList.remove("show"); resetNewPanel();
+    }
+    render();
+    toast("Created "+ok+" tracker"+(ok===1?"":"s")+(fail?(" · "+fail+" failed"):""));
+  });
+  $("#backfillBtn").addEventListener("click", async ()=>{
+    const cands=backfillCandidates(); if(!cands.length) return;
+    if(!window.confirm("Backfill the Transaction Originator onto "+cands.length+" already-tracked order"+(cands.length===1?"":"s")+" from this file?")) return;
+    $("#backfillBtn").disabled=true;
+    let ok=0, fail=0;
+    for(let i=0;i<cands.length;i++){
+      const c=cands[i]; banner("Backfilling "+(i+1)+" of "+cands.length+"…  ("+ok+" done"+(fail?", "+fail+" failed":"")+")");
+      let done=false;
+      for(let attempt=0; attempt<4 && !done; attempt++){
+        if(attempt>0) await sleep(3000*Math.pow(2,attempt-1));
+        try{ await setTradeReq(c.issue, c.trade, c.requisitioner); done=true; }catch(e){}
+      }
+      done ? ok++ : fail++;
+      if(i < cands.length-1) await sleep(CREATE_PACE_MS);
+    }
+    STATE.existingTrackers=await fetchExistingTrackers();
+    STATE.existingReqs=new Set(STATE.existingTrackers.map(t=>String(t.reqNumber)));
+    invalidateCache(); await loadTrackers(true);
+    $("#backfillBtn").disabled=false; renderPreview(); render();
+    banner(""); toast("Backfilled "+ok+" order"+(ok===1?"":"s")+(fail?(" · "+fail+" failed"):""));
+  });
+  let qTimer;   // debounce search so we don't re-render the whole (large) list on every keystroke
+  $("#q").addEventListener("input", ()=>{ clearTimeout(qTimer); qTimer=setTimeout(()=>{ STATE.page=1; render(); }, 180); });
+  $("#fTrade").addEventListener("change", ()=>{ STATE.page=1; render(); });
+  $("#fOriginator").addEventListener("change", ()=>{ STATE.page=1; render(); });
+  $("#fFrom").addEventListener("change", ()=>{ STATE.page=1; render(); });
+  $("#fTo").addEventListener("change", ()=>{ STATE.page=1; render(); });
+  $("#todayBtn").addEventListener("click", ()=>{
+    const d=todayISO(); $("#fFrom").value=d; $("#fTo").value=d;   // exact today via range
+    STATE.page=1; render();
+  });
+  $("#filtersBtn").addEventListener("click", ()=>{
+    const fb=$("#filterbar"), open=fb.classList.toggle("show");
+    $("#filtersBtn").setAttribute("aria-expanded", open?"true":"false");
+  });
+  $("#clearFilters").addEventListener("click", ()=>{
+    $("#fTrade").value=""; $("#fOriginator").value=""; $("#fFrom").value=""; $("#fTo").value="";
+    STATE.page=1; render();
+  });
+  $("#segActive").addEventListener("click", async ()=>{ STATE.state="open"; STATE.page=1; $("#segActive").setAttribute("aria-selected","true"); $("#segDone").setAttribute("aria-selected","false"); await loadTrackers(); render(); });
+  $("#segDone").addEventListener("click", async ()=>{ STATE.state="closed"; STATE.page=1; $("#segDone").setAttribute("aria-selected","true"); $("#segActive").setAttribute("aria-selected","false"); await loadTrackers(); render(); });
+  $("#pgPrev").addEventListener("click", ()=>{ if(STATE.page>1) gotoPage(STATE.page-1); });
+  $("#pgNext").addEventListener("click", ()=>{ gotoPage(STATE.page+1); });
+  $("#pgSel").addEventListener("change", e=>{ gotoPage(Number(e.target.value)||1); });
+  $("#purgeLegacy").addEventListener("click", async ()=>{
+    const legacy=STATE.trackers.filter(isLegacy); if(!legacy.length) return;
+    if(!window.confirm("Delete "+legacy.length+" legacy (old-format) tracker"+(legacy.length===1?"":"s")+"? Each GitHub issue is closed as a record.")) return;
+    $("#purgeLegacy").disabled=true;
+    let ok=0, fail=0;
+    for(let i=0;i<legacy.length;i++){ const t=legacy[i]; toast("Purging "+(i+1)+"/"+legacy.length+"…");
+      try{ await deleteReq(t.issue); const idx=STATE.trackers.findIndex(x=>x.issue===t.issue); if(idx>=0) STATE.trackers.splice(idx,1); ok++; }
+      catch(err){ fail++; }
+    }
+    $("#purgeLegacy").disabled=false; invalidateCache(); render();
+    toast("Purged "+ok+(fail?(" · "+fail+" failed"):""));
+  });
+  $("#list").addEventListener("change", async e=>{
+    const sel=e.target.closest(".trkTrade"); if(!sel) return;
+    const issue=parseInt(sel.getAttribute("data-issue"),10), trade=sel.value;
+    sel.disabled=true;
+    try{ toast("Updating trade…"); const res=await setTradeReq(issue, trade);
+      const idx=STATE.trackers.findIndex(t=>t.issue===issue);
+      if(idx>=0 && res.tracker) STATE.trackers[idx]=res.tracker;
+      invalidateCache(); toast("Trade updated"); render();
+    }catch(err){ sel.disabled=false; toast("Failed: "+err.message);
+      const idx=STATE.trackers.findIndex(t=>t.issue===issue); if(idx>=0) sel.value=STATE.trackers[idx].trade; }
+  });
+  $("#list").addEventListener("click", async e=>{
+    if(e.target.closest(".trkTrade")) return;   // let the trade editor handle its own clicks (don't toggle)
+    // ----- correct a picked-up qty (intentional: Edit -> change -> Save) -----
+    const pkEdit=e.target.closest(".pk-edit");
+    if(pkEdit){ const pk=pkEdit.closest(".pk"); pk.classList.add("editing"); const q=pk.querySelector(".pk-q"); q.focus(); q.select(); return; }
+    const pkCancel=e.target.closest(".pk-cancel");
+    if(pkCancel){ pkCancel.closest(".pk").classList.remove("editing"); return; }
+    const pkSave=e.target.closest(".pk-save");
+    if(pkSave){
+      const pk=pkSave.closest(".pk");
+      const q=pk.querySelector(".pk-q").value.trim();
+      const applyResult=(res, issue, okMsg)=>{
+        const i=STATE.trackers.findIndex(t=>t.issue===parseInt(issue,10)); invalidateCache();
+        if(res.complete){ if(i>=0) STATE.trackers.splice(i,1); toast("Updated — tracker complete"); render(); }
+        else { if(i>=0 && res.tracker) STATE.trackers[i]=res.tracker; toast(okMsg); render();
+          const card=document.querySelector('.trk[data-issue="'+issue+'"]'); if(card) card.classList.add("open"); }
+      };
+      // 1) pickup entry qty
+      if(pk.hasAttribute("data-pk")){
+        const [issue,line,idx]=pk.getAttribute("data-pk").split("|");
+        if(q===""||!isFinite(Number(q))||Number(q)===0){ toast("Enter a corrected quantity"); return; }
+        if(!window.confirm("Update this picked-up quantity to "+q+"?")) return;
+        try{ toast("Updating…"); applyResult(await editPickup(parseInt(issue,10), line, parseInt(idx,10), Number(q)), issue, "Pickup qty updated"); }
+        catch(err){ toast("Failed: "+err.message); }
+        return;
+      }
+      // 2) expected value (absolute)
+      if(pk.hasAttribute("data-ex")){
+        const [issue,line]=pk.getAttribute("data-ex").split("|");
+        if(q===""||!isFinite(Number(q))||Number(q)<0){ toast("Enter a valid expected quantity"); return; }
+        if(!window.confirm("Set Expected to "+q+"?")) return;
+        try{ toast("Updating…"); applyResult(await editExpected(parseInt(issue,10), line, Number(q)), issue, "Expected updated"); }
+        catch(err){ toast("Failed: "+err.message); }
+        return;
+      }
+      // 3) delivered total (applied as the adjusting difference)
+      if(pk.hasAttribute("data-de")){
+        const [issue,line]=pk.getAttribute("data-de").split("|");
+        const cur=Number(pk.getAttribute("data-cur")||"0");
+        if(q===""||!isFinite(Number(q))||Number(q)<0){ toast("Enter a valid delivered quantity"); return; }
+        const target=Number(q), delta=target-cur;
+        if(delta===0){ pk.classList.remove("editing"); return; }
+        if(!window.confirm("Set Delivered to "+target+"?")) return;
+        try{ toast("Updating…"); applyResult(await adjustDelivered(parseInt(issue,10), line, delta), issue, "Delivered updated"); }
+        catch(err){ toast("Failed: "+err.message); }
+        return;
+      }
+      return;
+    }
+    const cmp=e.target.closest("[data-complete]");
+    if(cmp){
+      const issue=parseInt(cmp.getAttribute("data-complete"),10);
+      if(!window.confirm("Mark this order complete? It moves to the Completed tab.")) return;
+      try{ toast("Completing…"); await completeReq(issue);
+        const idx=STATE.trackers.findIndex(t=>t.issue===issue); if(idx>=0) STATE.trackers.splice(idx,1);
+        invalidateCache(); toast("Order marked complete"); render();
+      }catch(err){ toast("Failed: "+err.message); }
+      return;
+    }
+    const del=e.target.closest("[data-delete]");
+    if(del){
+      const issue=parseInt(del.getAttribute("data-delete"),10);
+      if(!window.confirm("Delete this tracker? It's removed from the app (the GitHub issue is closed as a record).")) return;
+      try{ toast("Deleting…"); await deleteReq(issue);
+        const idx=STATE.trackers.findIndex(t=>t.issue===issue); if(idx>=0) STATE.trackers.splice(idx,1);
+        invalidateCache(); toast("Tracker deleted"); render();
+      }catch(err){ toast("Delete failed: "+err.message); }
+      return;
+    }
+    const prt=e.target.closest("[data-print]");
+    if(prt){
+      const issue=parseInt(prt.getAttribute("data-print"),10);
+      const t=STATE.trackers.find(x=>x.issue===issue); if(t) printSheet(t);
+      return;
+    }
+    const ev=e.target.closest("[data-ev]");
+    if(ev){
+      const [kind,issue,line]=ev.getAttribute("data-ev").split("|");
+      const row=ev.closest("tr"); let qty, by="";
+      if(kind==="pickup"){
+        qty=row.querySelector(".pqty").value.trim(); by=row.querySelector(".pby").value.trim();
+        if(!qty||Number(qty)===0){ toast("Enter a pickup quantity"); return; }
+        if(!by){ toast("Enter who picked it up"); return; }
+      } else if(kind==="expected"){
+        qty=row.querySelector(".exqty").value.trim();
+        if(qty===""||!isFinite(Number(qty))||Number(qty)<0){ toast("Enter an expected quantity"); return; }
+      } else {
+        qty=row.querySelector(".dqty").value.trim();
+        if(!qty||Number(qty)===0){ toast("Enter a delivered quantity"); return; }
+      }
+      try{
+        toast("Logging…");
+        const res=await logEvent(parseInt(issue,10), line, kind, qty, by);
+        const idx=STATE.trackers.findIndex(t=>t.issue===parseInt(issue,10));
+        invalidateCache();
+        if(res.complete){ if(idx>=0) STATE.trackers.splice(idx,1); toast("Logged — tracker complete"); render(); }
+        else { if(idx>=0 && res.tracker) STATE.trackers[idx]=res.tracker; toast(kind==="pickup"?"Pickup logged":(kind==="expected"?"Expected qty set":"Delivery logged")); render();
+          const card=document.querySelector('.trk[data-issue="'+issue+'"]'); if(card) card.classList.add("open"); }
+      }catch(err){ toast("Failed: "+err.message); }
+      return;
+    }
+    const tog=e.target.closest("[data-toggle]");
+    if(tog){ tog.closest(".trk").classList.toggle("open"); }
+  });
+}
+async function init(){
+  initTrades(); bind();
+  STATE.adminName=localStorage.getItem("bac_admin_name")||"";
+  if(localStorage.getItem("bac_admin_key")) setAdmin(true);   // stay logged in on this device (shared with the hub)
+  if(STATE.admin && new URLSearchParams(location.search).get("admin")==="new"){ $("#newPanel").classList.add("show"); }
+  const dq=new URLSearchParams(location.search).get("q"); if(dq){ $("#q").value=dq; }   // deep-link from Dashboard search
+  await loadTrackers();
+  render();
+}
+init();
+</script>
+<script>
+/* Optional view-only gate. Public unless data/access.json sets a view key.
+   Admins (bac_admin_key present) are exempt. Deterrent only — repo is public. */
+(function(){
+  var D=document.documentElement;
+  function reveal(){ D.classList.remove("acc-wait"); }
+  try{ if(localStorage.getItem("bac_admin_key")){ reveal(); return; } }catch(e){ reveal(); return; }
+  async function sha(s){ var b=await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+    return Array.prototype.map.call(new Uint8Array(b), function(x){return x.toString(16).padStart(2,"0");}).join(""); }
+  fetch("data/access.json",{cache:"no-store"}).then(function(r){return r.ok?r.json():{view:null};})
+    .catch(function(){return {view:null};})
+    .then(async function(cfg){
+      var v=cfg&&cfg.view;
+      if(!v||!v.salt||!v.hash){ reveal(); return; }
+      var stored=""; try{ stored=localStorage.getItem("bac_view_key")||""; }catch(e){}
+      if(stored && (await sha(v.salt+":"+stored))===v.hash){ reveal(); return; }
+      D.classList.remove("acc-wait"); D.classList.add("acc-locked");
+      var input=document.getElementById("accInput"), btn=document.getElementById("accBtn"), err=document.getElementById("accErr");
+      async function attempt(){
+        var k=(input.value||"").trim(); if(!k) return;
+        if((await sha(v.salt+":"+k))===v.hash){ try{localStorage.setItem("bac_view_key",k);}catch(e){} location.reload(); }
+        else { err.textContent="That access key isn't right. Contact your SIS for access."; input.value=""; input.focus(); }
+      }
+      btn.addEventListener("click", attempt);
+      input.addEventListener("keydown", function(e){ if(e.key==="Enter") attempt(); });
+      input.focus();
+    });
+})();
+</script>
+</body>
+</html>
