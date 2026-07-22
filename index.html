@@ -273,7 +273,7 @@ const GS = { assets:[], trackers:[] };
 function fmtUpdated(iso){
   if(!iso) return "";
   const p=iso.slice(0,10).split("-");                 // [YYYY, MM, DD]
-  const date = p.length===3 ? (p[1]+"-"+p[2]) : iso.slice(0,10);  // MM-DD
+  const date = p.length===3 ? (p[2]+"-"+p[1]+"-"+p[0].slice(2)) : iso.slice(0,10);  // DD-MM-YY
   let time="";
   const t=iso.slice(11,16);                            // "HH:MM"
   if(t){
