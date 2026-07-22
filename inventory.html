@@ -62,9 +62,8 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
   .topbar h1{color:var(--white);font-size:20px;letter-spacing:0.01em;}
   .topbar .sub{font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:var(--light-blue);font-weight:bold;margin-top:3px;}
   .topbar .spacer{flex:1;}
-  .topbar .asof{display:none;align-items:center;gap:9px;flex:0 0 auto;border:1px solid var(--energy-blue);border-radius:999px;padding:7px 14px;}
+  .topbar .asof{display:none;align-items:center;flex:0 0 auto;}
   .topbar .asof.show{display:inline-flex;}
-  .topbar .asof .dot{width:7px;height:7px;border-radius:50%;background:var(--energy-blue);flex:0 0 7px;}
   .topbar .asof .lbl2{font-size:9px;text-transform:uppercase;letter-spacing:0.03em;color:var(--light-blue);font-weight:bold;}
   .topbar .asof .val{font-size:11px;color:var(--white);font-weight:bold;}
 
@@ -432,9 +431,18 @@ const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<"
 /* Last-updated pill (date + time from the build's ISO timestamp). */
 function fmtUpdated(iso){
   if(!iso) return "";
-  const date=iso.slice(0,10), time=iso.slice(11,16);
-  return '<span class="dot"></span><span><span class="lbl2">Last updated</span><br>' +
-    '<span class="val">' + esc(date) + (time?(' &middot; ' + esc(time) + ' UTC'):'') + '</span></span>';
+  const p=iso.slice(0,10).split("-");                 // [YYYY, MM, DD]
+  const date = p.length===3 ? (p[1]+"-"+p[2]) : iso.slice(0,10);  // MM-DD
+  let time="";
+  const t=iso.slice(11,16);                            // "HH:MM"
+  if(t){
+    let h=+t.slice(0,2); const m=t.slice(3,5);
+    const ap = h<12 ? "AM" : "PM";
+    h = h%12 || 12;                                    // 12-hour
+    time = h + ":" + m + " " + ap;
+  }
+  return '<span><span class="lbl2">Last updated</span><br>' +
+    '<span class="val">' + esc(date) + (time?(' &middot; ' + esc(time)):'') + '</span></span>';
 }
 
 /* ---------- storage / cache ---------- */
