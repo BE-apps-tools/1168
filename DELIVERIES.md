@@ -102,6 +102,12 @@ Each line captures two events, which happen at different times:
   negative quantity subtracts). To remove a whole tracker, expand it and click
   **Delete order** (admin) — it leaves the app and its GitHub Issue is closed
   (labeled `req-deleted`) as a record.
+- **Remove a single line (admin):** expand the tracker and click **Remove line**
+  in that line's *Log delivery / pickup* cell (it asks you to confirm). Use this
+  when a line is a duplicate — e.g. procurement converted a Grainger part into
+  the company's stock item, so the same material shows on two lines. The line is
+  dropped from the tracker and the counts update. The last remaining line can't
+  be removed this way — use **Delete order** for the whole tracker instead.
 - **Purge legacy (admin):** old trackers created before the current format show a
   **Purge N legacy** button on the Active toolbar — one click deletes them all
   (each issue closed as a record).
@@ -125,4 +131,4 @@ Each line captures two events, which happen at different times:
 | "admin only" / can't create or log | Your `ADMIN_KEY` is wrong or was rotated — re-unlock with the current value. |
 | "This browser can't read .xlsx" | Use Chrome/Edge or recent Safari (needs DecompressionStream). |
 | New tracker not visible to teammates yet | GitHub index lag — refresh in a few seconds. |
-| Nothing loads / errors | Check `https://asset-portal.site-asset-manager.workers.dev/health`. |
+| Nothing loads / errors | Check `https://1168-panhandle.site-asset-manager.workers.dev/health`. |

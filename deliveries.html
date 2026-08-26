@@ -48,6 +48,8 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
     border-top:none;border-left:none;transform:rotate(45deg);}
   .ic-admin::before{content:"";box-sizing:border-box;position:absolute;left:5px;top:1px;width:10px;height:8px;border:2px solid currentColor;border-bottom:none;border-radius:5px 5px 0 0;}
   .ic-admin::after{content:"";box-sizing:border-box;position:absolute;left:3px;top:8px;width:14px;height:11px;background:currentColor;border-radius:2px;}
+    .ic-recv::before{content:"";box-sizing:border-box;position:absolute;left:1px;top:11px;width:18px;height:8px;border:2px solid currentColor;border-top:none;border-radius:0 0 3px 3px;}
+  .ic-recv::after{content:"";box-sizing:border-box;position:absolute;left:7px;top:2px;width:6px;height:6px;border:2px solid currentColor;border-top:none;border-left:none;transform:rotate(45deg);}
   .ic-guide::before{content:"";box-sizing:border-box;position:absolute;left:1px;top:2px;width:18px;height:16px;border:2px solid currentColor;border-radius:2px;}
   .ic-guide::after{content:"";position:absolute;left:9px;top:2px;width:2px;height:16px;background:currentColor;}
   .rail-lbl{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:9px;letter-spacing:0.04em;display:block;}
@@ -187,6 +189,8 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
   .pk-save,.pk-cancel{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:9px;letter-spacing:0.04em;border-radius:var(--r-sm);padding:5px 9px;cursor:pointer;}
   .pk-save{background:var(--dark-blue);color:var(--white);border:1px solid var(--dark-blue);}
   .pk-cancel{background:var(--white);color:var(--dark-blue);border:1px solid var(--light-gray);}
+  .del-line{background:none;border:none;color:var(--medium-gray);font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:9px;letter-spacing:0.04em;cursor:pointer;padding:0 2px;}
+  .del-line:hover{color:var(--amber);}
 
   .empty{padding:44px 20px;text-align:center;color:var(--medium-gray);background:var(--white);border:1px solid var(--light-gray);border-radius:var(--r);box-shadow:var(--shadow);}
   .empty .big{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;color:var(--light-gray);font-size:18px;margin-bottom:6px;}
@@ -263,7 +267,8 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
 </svg></a>
     <a class="rail-item" href="index.html"><span class="rail-ic ic-hub"></span><span class="rail-lbl">Dashboard</span></a>
     <a class="rail-item" href="inventory.html"><span class="rail-ic ic-assets"></span><span class="rail-lbl">Assets</span></a>
-    <a class="rail-item active" href="deliveries.html"><span class="rail-ic ic-deliv"></span><span class="rail-lbl">Deliveries</span></a>
+    <a id="railDeliveries" class="rail-item active" href="deliveries.html"><span class="rail-ic ic-deliv"></span><span class="rail-lbl">Deliveries</span></a>
+    <a id="railReceiving" class="rail-item" href="deliveries.html?view=receiving" style="display:none"><span class="rail-ic ic-recv"></span><span class="rail-lbl">Receiving</span></a>
     <a class="rail-item" href="admin.html"><span class="rail-ic ic-admin"></span><span class="rail-lbl">Admin</span></a>
     <a class="rail-item" href="guide.html"><span class="rail-ic ic-guide"></span><span class="rail-lbl">Guide</span></a>
     <div class="rail-foot">BEI</div>
@@ -305,8 +310,48 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
         </div>
       </div>
 
+      <!-- Receiving (MRR / EJDE reconciliation + delivery log) -->
+      <div id="receivingView" style="display:none;">
+        <div class="card">
+          <div class="card-head"><h2>Receiving &mdash; EJDE reconciliation</h2></div>
+          <div class="card-body">
+            <div id="recvAdmin" style="display:none;">
+              <div class="field"><label>MRR export (.xlsx) <span style="color:var(--dark-blue)">*</span></label>
+                <input type="file" id="mrrFile" accept=".xlsx"></div>
+              <div id="mrrPreview" class="ordsum" style="display:none;"></div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 4px;">
+                <button class="btn" id="mrrImport" disabled>Import to receiving log</button>
+                <button class="btn secondary" id="sweepOnSite">Complete fully on-site trackers</button>
+              </div>
+            </div>
+            <div class="toolbar">
+              <div class="search"><input type="text" id="rq" aria-label="Search receiving" placeholder="Search Ref ID, Unique ID, MRR#, part, supplier, slip&hellip;"></div>
+              <span class="fgrp"><span class="flbl">Status</span><select id="rStatus"><option value="">All statuses</option><option>Completed</option><option>Partially received</option><option>Open &mdash; nothing received</option><option>Missing &mdash; no EJDE receipt</option></select></span>
+              <span class="fgrp"><span class="flbl">Trade</span><select id="rTrade"><option value="">All trades</option></select></span>
+            </div>
+            <div id="recvSummary" class="ordsum"></div>
+            <style>
+              #recvList table{font-size:12px;}
+              #recvList th,#recvList td{white-space:nowrap;vertical-align:top;}
+              /* Description, Supplier, Packing Slip/BOL may wrap; every other column stays on one line */
+              #recvList td:nth-child(3),#recvList td:nth-child(5),#recvList td:nth-child(13){white-space:normal;min-width:150px;}
+              #recvList .badge{white-space:nowrap;}
+              #recvList .slip-edit{width:150px;font:inherit;padding:3px 6px;border:1px solid var(--light-gray);border-radius:6px;color:var(--dark-gray);}
+              #recvList .slip-edit:focus{outline:2px solid var(--energy-blue);outline-offset:-1px;}
+            </style>
+            <div id="recvList" class="table-scroll"></div>
+            <div class="pager" id="recvPager" style="display:none;">
+              <button class="pg-btn" id="recvPgPrev" aria-label="Previous page">&lsaquo;</button>
+              <select id="recvPgSel" aria-label="Page"></select>
+              <button class="pg-btn" id="recvPgNext" aria-label="Next page">&rsaquo;</button>
+              <span class="pg-info" id="recvPgInfo"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="toolbar">
-        <div class="search"><input type="text" id="q" aria-label="Search requisitions" placeholder="Search Req #, project, part, originator…"></div>
+        <div class="search"><input type="text" id="q" aria-label="Search requisitions" placeholder="Search Req #, project, part, buyer…"></div>
         <div class="seg" role="tablist">
           <button id="segActive" aria-selected="true">Active</button>
           <button id="segDone" aria-selected="false">Completed</button>
@@ -316,7 +361,7 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
       </div>
       <div class="filterbar" id="filterbar">
         <span class="fgrp"><span class="flbl">Trade</span><select id="fTrade"><option value="">All trades</option></select></span>
-        <span class="fgrp"><span class="flbl">Originator</span><select id="fOriginator"><option value="">All originators</option></select></span>
+        <span class="fgrp"><span class="flbl">Category</span><select id="fCategory"><option value="">All categories</option></select></span>
         <span class="flbl">Date</span>
         <button type="button" class="btn small secondary" id="todayBtn">Today</button>
         <span class="fgrp"><span class="flbl">From</span><input type="date" id="fFrom" aria-label="Required date from"></span>
@@ -342,8 +387,8 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
 <script>
 "use strict";
 const WORKER_URL = "https://1168-panhandle.site-asset-manager.workers.dev";
-const TRADES = ["Civil","Electrical","Foundation","Collection","Install","Mechanical",
-  "Commissioning","Substation","BESS","Safety","SM/PCC","Survey","Quality","TLine","Inventory","Decom","Other"];
+const TRADES = ["Electrical","Civil","Install","Commissioning","SIS","Office","Maintenance","Safety","Survey","TLine"];
+const CATEGORIES = ["Indirect","Incorporated","Equipment"];
 const STATE = { trackers:[], state:"open", admin:false, adminName:"", pendingOrders:null, existingReqs:null, existingTrackers:null, page:1, cache:{open:null,closed:null} };
 const PAGE_SIZE = 100;
 const CREATE_PACE_MS = 1200;   // spacing between bulk creates (GitHub throttles rapid issue creation)
@@ -422,14 +467,43 @@ function sheetRows(xml, shared){
   }
   return rows;
 }
-/* ---------- Req parser: one tracker per Order Number ----------
+/* ---------- Req parser: one tracker per requisition (Hubble export) ----------
    Reads the first sheet by EXACT header name (column order may vary).
-   Kept columns: Order Number (Req #), Line Number, Line Description,
-   2nd Item Number (Part #), UM, Request Date, Description Line 2.
-   Everything else is ignored; no ordered quantity is captured. */
-const REQ_COLS = { order:"Order Number", line:"Line Number", desc:"Line Description",
-  part:"2nd Item Number", uom:"UM", reqDate:"Request Date", desc2:"Description Line 2",
-  originator:"Transaction Originator", qty:"Quantity To Receive" };   /* qty -> Expected; never read Unit Cost */
+   Only rows that (a) belong to THIS site (Branch/Plant) and (b) carry a REQ#
+   in Reference 2 become trackers — everything else is procurement backend noise.
+   Order # = the requisition # from Reference 2 (stable across req->PO conversion).
+   Supplier SO splits into a cost Category (prefix) + Trade. Qty Ordered -> Expected. */
+const REQ_COLS = { order:"Order #", ref2:"Reference 2", line:"Line Number",
+  desc:"Description", desc2:"Description 2", part:"2Nd Item Number", qty:"Quantity Ordered",
+  received:"Quantity Received", orderDate:"Order Date", reqDate:"Promised Delivery Date",
+  supplierSO:"Supplier SO", buyer:"Buyer #", branch:"Branch/Plant" };
+/* Supplier SO carries a cost-category prefix (IND/INC/EQP…) AND the trade word.
+   Fuzzy-match the trade (typo-tolerant, first match wins for multi-trade cells);
+   unrecognized/blank -> "" (Unassigned, admin sets). */
+const TRADE_ALIASES = [["Electrical",["ELECTRICAL","ELECRICAL","EECTRICAL","EELCTRICAL","ELEC"]],
+  ["Civil",["CIVIL","CVIL"]],["Install",["INSTALL","INTSALL","INATALL","INSTAL"]],
+  ["Commissioning",["COMMISSIONING","COMMISS","COMM"]],["SIS",["SIS"]],["Office",["OFFICE"]],
+  ["Maintenance",["MAINTENANCE","MANTAINANCE","MAINTENENCE","MAINT","MECHANICAL","MECHANIC","MECH"]],
+  ["Safety",["SAFETY"]],["Survey",["SURVEY","SURV"]],["TLine",["TLINE","T-LINE","T LINE"]]];
+function normTrade(s){ const u=String(s||"").replace(/\s+/g," ").toUpperCase().trim(); if(!u) return "";
+  let best="",bp=Infinity; for(const [t,al] of TRADE_ALIASES) for(const a of al){ const p=u.indexOf(a); if(p>=0&&p<bp){bp=p;best=t;} } return best; }
+function normCategory(s){ const tok=String(s||"").toUpperCase().replace(/[^A-Z].*$/,"");
+  if(tok.startsWith("IND")) return "Indirect"; if(tok.startsWith("INC")) return "Incorporated";
+  if(tok.startsWith("EQ")||tok.startsWith("EPQ")) return "Equipment"; return ""; }
+const _digits=s=>{ const m=String(s==null?"":s).replace(/\D/g,""); return m.replace(/^0+/,"")||m; };
+const _reqNum=s=>{ const m=/REQ#?\s*0*(\d+)/i.exec(String(s==null?"":s)); return m?m[1]:""; };
+const _isFreight=(part,desc)=>{ const f=x=>String(x||"").trim().toUpperCase()==="FREIGHT"; return f(part)||f(desc); };
+/* Site code(s) for THIS environment (from data/sites.json) — drop procurement /
+   warehouse / other-site rows by Branch/Plant. Cached after first read; if unknown
+   (e.g. no inventory published yet), the site filter is skipped. */
+let _siteCodes=null;
+async function siteCodes(){
+  if(_siteCodes) return _siteCodes;
+  try{ const r=await fetch("data/sites.json",{cache:"no-store"}); const a=r.ok?await r.json():[];
+    _siteCodes=(Array.isArray(a)?a:[]).map(s=>String(s.code||"").trim()).filter(Boolean); }
+  catch(e){ _siteCodes=[]; }
+  return _siteCodes;
+}
 function firstSheetPath(wb, relMap){
   const m=/<sheet\s+[^>]*r:id="([^"]+)"/.exec(wb);
   if(!m) throw new Error("No sheet found in workbook");
@@ -445,41 +519,58 @@ async function parseReqXlsx(file){
   for(const m of rels.matchAll(/<Relationship\s+[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"/g)) relMap[m[1]]=m[2];
   const rows=sheetRows(await zip.get(firstSheetPath(wb,relMap))||"", shared);
   if(!rows.length) throw new Error("The sheet is empty");
-  // Match headers case-insensitively and whitespace-normalized, so exports that
-  // drift in capitalization or extra spaces (e.g. " Request date") still map.
+  // Match headers case-insensitively and whitespace-normalized (names are fixed; order may vary).
   const norm=s=>String(s||"").replace(/\s+/g," ").trim().toLowerCase();
   const hdrRaw=rows[0].map(x=>String(x||"").trim());
   const hdrNorm=hdrRaw.map(norm);
   const col=name=>hdrNorm.indexOf(norm(name));
   const iOrder=col(REQ_COLS.order);
   if(iOrder<0) throw new Error('Header "'+REQ_COLS.order+'" not found. Headers: '+(hdrRaw.filter(Boolean).join(", ")||"(none)"));
-  const iLine=col(REQ_COLS.line), iDesc=col(REQ_COLS.desc), iPart=col(REQ_COLS.part),
-        iUom=col(REQ_COLS.uom), iReq=col(REQ_COLS.reqDate), iD2=col(REQ_COLS.desc2),
-        iOrig=col(REQ_COLS.originator), iQty=col(REQ_COLS.qty);
-  const byOrder=new Map(), byOrig=new Map();
+  const iRef2=col(REQ_COLS.ref2), iLine=col(REQ_COLS.line), iDesc=col(REQ_COLS.desc), iD2=col(REQ_COLS.desc2),
+        iPart=col(REQ_COLS.part), iQty=col(REQ_COLS.qty), iRecv=col(REQ_COLS.received), iRD=col(REQ_COLS.reqDate),
+        iSO=col(REQ_COLS.supplierSO), iBuyer=col(REQ_COLS.buyer), iBranch=col(REQ_COLS.branch);
+  const codes=await siteCodes();
+  const D=row=>_digits(iOrder>=0?row[iOrder]:"");
+  const T=row=>iRef2>=0?_reqNum(row[iRef2]):"";
+  const siteOk=row=>{ if(!codes.length || iBranch<0) return true; const bp=String(row[iBranch]||"").trim(); return codes.some(c=>bp.startsWith(c)); };
+  // Pass 1: PO# -> req# map, learned only from rows carrying a REQ# in Reference 2.
+  const d2req=new Map();
+  for(let r=1;r<rows.length;r++){ const t=T(rows[r]); if(t){ const d=D(rows[r]); if(d && !d2req.has(d)) d2req.set(d,t); } }
+  // Pass 2: which reqs were converted to a PO (a REQ# row whose Order # differs from the req#).
+  const converted=new Set();
+  for(let r=1;r<rows.length;r++){ const req=T(rows[r]); if(!req) continue; const d=D(rows[r]); if(d && d!==req) converted.add(req); }
+  // Pass 3: build one tracker per requisition — this site only, drop backend noise / freight / stale req rows.
+  const byOrder=new Map(), tradeBy=new Map(), catBy=new Map(), buyerBy=new Map();
   for(let r=1;r<rows.length;r++){
-    const row=rows[r];
-    const order=cleanNum(iOrder>=0?row[iOrder]:"");
-    if(!order) continue;
+    const row=rows[r]; const req=T(row);
+    if(!req) continue;                                   // no REQ# -> procurement / backend noise
+    if(!siteOk(row)) continue;                           // Branch/Plant not this site
+    const d=D(row);
+    if(converted.has(req) && d===req) continue;          // stale requisition superseded by its PO
     const d1=iDesc>=0?String(row[iDesc]||"").trim():"";
     const d2=iD2>=0?String(row[iD2]||"").trim():"";
     const part=iPart>=0?String(row[iPart]||"").trim():"";
+    if(_isFreight(part,d1)) continue;                    // freight / non-material
     const lnRaw=iLine>=0?cleanNum(row[iLine]):"";
     const qRaw=iQty>=0?cleanNum(row[iQty]):"";
+    const rvRaw=iRecv>=0?cleanNum(row[iRecv]):"";
     const line={ line: lnRaw!==""?(parseInt(lnRaw,10)||lnRaw):"", part,
-      desc:d1+(d2?(" "+d2):""), uom:iUom>=0?String(row[iUom]||"").trim():"",
-      requiredDate:iReq>=0?excelSerialToISO(row[iReq]):"",
-      expected:(qRaw!=="" && isFinite(Number(qRaw)))?Number(qRaw):null };   /* prefill Expected from the file when present */
+      desc:d1+(d2?(" "+d2):""), uom:"",
+      requiredDate:iRD>=0?excelSerialToISO(row[iRD]):"",
+      expected:(qRaw!=="" && isFinite(Number(qRaw)))?Number(qRaw):null,
+      received:(rvRaw!=="" && isFinite(Number(rvRaw)))?Number(rvRaw):0,   /* Quantity Received -> seed Delivered */
+      orderNo:d };   /* PO Order # -> join key (Order#-Line#) for MRR receiving reconciliation */
     if(!line.desc && !part && line.line==="") continue;
-    const orig=iOrig>=0?String(row[iOrig]||"").trim():"";
-    if(orig && !byOrig.get(order)) byOrig.set(order, orig);   // first non-empty originator per order
-    if(!byOrder.has(order)) byOrder.set(order, []);
-    byOrder.get(order).push(line);
+    if(!byOrder.has(req)) byOrder.set(req, []);
+    byOrder.get(req).push(line);
+    if(!tradeBy.get(req)){ const tr=iSO>=0?normTrade(row[iSO]):""; if(tr) tradeBy.set(req,tr); }
+    if(!catBy.get(req)){ const ct=iSO>=0?normCategory(row[iSO]):""; if(ct) catBy.set(req,ct); }
+    if(!buyerBy.get(req)){ const bv=iBuyer>=0?String(row[iBuyer]||"").trim():""; if(bv) buyerBy.set(req,bv); }
   }
-  const orders=[...byOrder.entries()].map(([reqNumber,lines])=>({reqNumber, trade:"", lines, excluded:false, originator:byOrig.get(reqNumber)||""}));
+  const orders=[...byOrder.entries()].map(([reqNumber,lines])=>({reqNumber, trade:tradeBy.get(reqNumber)||"", category:catBy.get(reqNumber)||"", lines, excluded:false, originator:buyerBy.get(reqNumber)||""}));
   orders.sort((a,b)=>String(a.reqNumber).localeCompare(String(b.reqNumber),undefined,{numeric:true}));
-  if(!orders.length) throw new Error("No order rows found (every row was missing an Order Number).");
-  return orders;   /* NOTE: no cost/quantity field is ever produced */
+  if(!orders.length) throw new Error("No requisition rows found for this site (each tracked row needs a REQ# in Reference 2).");
+  return orders;
 }
 
 /* ---------- admin (real key wired in Task 4; here it unlocks the UI) ---------- */
@@ -568,10 +659,10 @@ function orderChunks(o){ return Math.max(1, Math.ceil((o.lines.length||0)/MAX_LI
    and carry a "Part i of N" label. */
 function chunkOrder(o){
   const n=orderChunks(o), req=o.originator||"";
-  if(n<=1) return [{ reqNumber:o.reqNumber, trade:o.trade, project:o.project||"", requisitioner:req, lines:o.lines }];
+  if(n<=1) return [{ reqNumber:o.reqNumber, trade:o.trade, category:o.category||"", project:o.project||"", requisitioner:req, lines:o.lines }];
   const out=[];
   for(let i=0;i<n;i++){
-    out.push({ reqNumber:o.reqNumber, trade:o.trade, requisitioner:req,
+    out.push({ reqNumber:o.reqNumber, trade:o.trade, category:o.category||"", requisitioner:req,
       project:(o.project?o.project+" · ":"")+"Part "+(i+1)+" of "+n,
       lines:o.lines.slice(i*MAX_LINES,(i+1)*MAX_LINES) });
   }
@@ -585,7 +676,7 @@ function updateCreateEnabled(){
   $("#createBtn").disabled=!ready;
   $("#createBtn").textContent = nw.length? ("Create "+n+" tracker"+(n===1?"":"s")) : "No new orders";
   const bf=$("#backfillBtn"), bc=backfillCandidates().length;
-  if(bf){ if(bc){ bf.style.display="inline-flex"; bf.textContent="Backfill originator on "+bc+" tracked"; } else bf.style.display="none"; }
+  if(bf){ if(bc){ bf.style.display="inline-flex"; bf.textContent="Backfill buyer on "+bc+" tracked"; } else bf.style.display="none"; }
 }
 const wbase = () => WORKER_URL.replace(/\/$/,"");
 function adminKey(){ return nsGet("bac_admin_key")||""; }
@@ -640,6 +731,14 @@ async function deleteReq(issue){
   if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||("HTTP "+r.status)); }
   return await r.json();
 }
+/* Remove one line from a tracker (e.g. a duplicate created when a Req line is
+   converted to a company stock item). The Worker rewrites the marker/body. */
+async function deleteLine(issue, line){
+  const r=await fetch(wbase()+"/req/line/delete",{method:"POST",headers:{"Content-Type":"application/json","x-admin-key":adminKey()},
+    body:JSON.stringify({issue, line})});
+  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||("HTTP "+r.status)); }
+  return await r.json();
+}
 async function completeReq(issue){
   const r=await fetch(wbase()+"/req/complete",{method:"POST",headers:{"Content-Type":"application/json","x-admin-key":adminKey()},
     body:JSON.stringify({issue})});
@@ -665,6 +764,11 @@ function lineStatus(delivered, picked){
 }
 function statusClass(s){ return s==="Picked up"?"st-complete":((s==="On site"||s==="Partial pickup")?"st-onsite":"st-none"); }
 function linePickPct(delivered, picked){ if(delivered<=0) return picked>0?100:0; return Math.max(0,Math.min(100,Math.round(100*picked/delivered))); }
+/* On-site is the PRIMARY progress metric. A line is on site once its delivered
+   qty covers the expected qty — or, when no expected qty is on file, once any
+   qty is on site. Pickup is a secondary, optional readout. */
+function lineOnSite(l){ const e=lineExpected(l), d=lineDelivered(l); return (e!=null && e>0) ? d>=e : d>0; }
+function trackerOnSite(t){ const ls=(t.marker&&t.marker.lines)||[]; let n=0; for(const l of ls){ if(lineOnSite(l)) n++; } return n; }
 /* Required-date urgency: overdue = past due and nothing on site yet; due soon = within 3 days and not on site. */
 function daysUntil(iso){ if(!iso) return null; const d=new Date(iso+"T00:00:00"); if(isNaN(d)) return null;
   const n=new Date(); const t=new Date(n.getFullYear(),n.getMonth(),n.getDate()); return Math.round((d-t)/86400000); }
@@ -697,22 +801,23 @@ function animateProgress(root){
 
 /* ---------- render trackers ---------- */
 function trackerOriginator(t){ return (t.marker && t.marker.requisitioner) || ""; }
+function trackerCategory(t){ return (t.marker && t.marker.category) || ""; }
 /* Any line whose required date falls in the inclusive [from,to] range (ISO strings). */
 function trackerInDateRange(t, from, to){ return ((t.marker&&t.marker.lines)||[]).some(l=>{ const d=l.requiredDate; if(!d) return false; if(from && d<from) return false; if(to && d>to) return false; return true; }); }
 function todayISO(){ const n=new Date(), p=x=>String(x).padStart(2,"0"); return n.getFullYear()+"-"+p(n.getMonth()+1)+"-"+p(n.getDate()); }
 function viewTrackers(){
-  const q=$("#q").value.trim().toLowerCase(), tf=$("#fTrade").value, of=$("#fOriginator").value;
+  const q=$("#q").value.trim().toLowerCase(), tf=$("#fTrade").value, cf=$("#fCategory").value;
   const from=$("#fFrom").value, to=$("#fTo").value;
   let v=STATE.trackers.slice();
   if(tf) v=v.filter(t=>t.trade===tf);
-  if(of) v=v.filter(t=>trackerOriginator(t)===of);
+  if(cf) v=v.filter(t=>trackerCategory(t)===cf);
   if(from||to) v=v.filter(t=>trackerInDateRange(t, from, to));
-  if(q) v=v.filter(t=>[t.reqNumber,t.project,t.description,t.trade,trackerOriginator(t)].some(x=>String(x||"").toLowerCase().includes(q)));
+  if(q) v=v.filter(t=>[t.reqNumber,t.project,t.description,t.trade,trackerCategory(t),trackerOriginator(t)].some(x=>String(x||"").toLowerCase().includes(q)));
   return v;
 }
 function activeFilterCount(){
   const range=($("#fFrom").value||$("#fTo").value)?1:0;
-  return [$("#fTrade").value,$("#fOriginator").value].filter(Boolean).length + range;
+  return [$("#fTrade").value,$("#fCategory").value].filter(Boolean).length + range;
 }
 function updateFiltersBtn(){
   const btn=$("#filtersBtn"); if(!btn) return;
@@ -720,13 +825,11 @@ function updateFiltersBtn(){
   btn.textContent = n? ("Filters · "+n) : "Filters";
   btn.classList.toggle("on", n>0);
 }
-/* Populate the originator filter from the distinct originators in the current list. */
-function fillOriginatorFilter(){
-  const sel=$("#fOriginator"); if(!sel) return;
-  const cur=sel.value;
-  const names=[...new Set(STATE.trackers.map(trackerOriginator).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
-  sel.innerHTML='<option value="">All originators</option>'+names.map(n=>'<option value="'+esc(n)+'"'+(n===cur?' selected':'')+'>'+esc(n)+'</option>').join("");
-  if(names.includes(cur)) sel.value=cur; else sel.value="";
+/* Populate the category filter (fixed list); preserve the current selection. */
+function fillCategoryFilter(){
+  const sel=$("#fCategory"); if(!sel) return; const cur=sel.value;
+  sel.innerHTML='<option value="">All categories</option>'+CATEGORIES.map(c=>'<option value="'+esc(c)+'"'+(c===cur?' selected':'')+'>'+esc(c)+'</option>').join("");
+  sel.value = CATEGORIES.includes(cur)?cur:"";
 }
 /* Branded, print-optimized pickup sheet for one tracker (new window → print). */
 function printSheet(t){
@@ -758,7 +861,7 @@ function printSheet(t){
     `</style></head><body>`+
     `<div class="hd"><div><div class="wm">Blattner</div><div class="sub">Site Inventory Portal</div></div><div class="sub">Printed ${today}</div></div>`+
     `<h1>Req ${esc(t.reqNumber)} &middot; ${esc(t.trade||"")}</h1>`+
-    `<div class="meta">${t.project?esc(t.project)+" &middot; ":""}${lines.length} line${lines.length===1?"":"s"} &middot; ${t.linesComplete}/${t.linesTotal} picked up</div>`+
+    `<div class="meta">${t.project?esc(t.project)+" &middot; ":""}${lines.length} line${lines.length===1?"":"s"} &middot; ${lines.filter(lineOnSite).length}/${lines.length} on site${t.linesComplete?(" &middot; "+t.linesComplete+" picked up"):""}</div>`+
     `<table><thead><tr><th>Line</th><th>Part #</th><th>Description</th><th>UoM</th><th>Required</th><th>Expected</th><th>Delivered</th><th>Pending</th><th>Picked up</th><th>Status</th><th>Picked up by / date</th></tr></thead><tbody>${rowsHtml}</tbody></table>`+
     `<div class="sign"><div>Received by (print &amp; sign)</div><div>Date</div></div>`+
     `<div class="foot">Blattner Site Inventory Portal &middot; internal use</div>`+
@@ -776,7 +879,7 @@ function updatePurgeBtn(){
 }
 function render(){
   updatePurgeBtn();
-  fillOriginatorFilter();
+  fillCategoryFilter();
   updateFiltersBtn();
   const list=$("#list"), empty=$("#empty"), v=viewTrackers();
   if(!STATE.trackers.length){
@@ -805,7 +908,8 @@ function renderPager(total, pages, start, shown){
 }
 function gotoPage(n){ STATE.page=n; render(); const l=$("#list"); if(l) l.scrollIntoView({block:"start"}); }
 function renderTracker(t){
-  const pct=t.linesTotal?Math.round(100*t.linesComplete/t.linesTotal):0;
+  const onSite=trackerOnSite(t), lineCount=t.linesTotal||((t.marker&&t.marker.lines)||[]).length;
+  const pct=lineCount?Math.round(100*onSite/lineCount):0;   // ring = on-site (primary)
   const rows=((t.marker&&t.marker.lines)||[]).map(l=>{
     const d=lineDelivered(l), p=linePickedUp(l), st=lineStatus(d,p), lp=linePickPct(d,p), e=lineExpected(l), pend=linePending(l);
     const canEditPk = STATE.admin && STATE.state==="open";
@@ -822,6 +926,7 @@ function renderTracker(t){
       ? '<td class="logcell">'+
           '<div class="ev"><span class="evlbl">Deliver</span><input class="dqty" type="text" inputmode="decimal" style="width:64px" placeholder="qty"><button class="btn small" data-ev="delivered|'+t.issue+'|'+esc(l.line)+'">Log</button></div>'+
           '<div class="ev"><span class="evlbl">Pickup</span><input class="pqty" type="text" inputmode="decimal" style="width:64px" placeholder="qty"><input class="pby" type="text" style="width:92px" placeholder="picked up by"><button class="btn small" data-ev="pickup|'+t.issue+'|'+esc(l.line)+'">Log</button></div>'+
+          '<div class="ev"><span class="evlbl"></span><button type="button" class="del-line" data-delline="'+t.issue+'|'+esc(l.line)+'">Remove line</button></div>'+
         '</td>'
       : '';
     // Intentional inline edit (Edit -> change -> Save), same pattern as pickup entries.
@@ -854,7 +959,8 @@ function renderTracker(t){
   return '<div class="trk'+(isDone?' done':'')+'" data-issue="'+t.issue+'">'+
     '<div class="top" data-toggle="'+t.issue+'"><span class="req">Req '+esc(t.reqNumber)+'</span> '+tradeCtl+overBadge+doneBadge+' '+
       (t.project?'<span class="meta">'+esc(t.project)+'</span>':'')+origMeta+
-      '<span class="prog"><span class="lines">'+t.linesComplete+'/'+t.linesTotal+' picked up</span>'+ringSvg(pct)+'</span>'+completeBtn+'</div>'+
+      (t.linesComplete>0?'<span class="meta">'+t.linesComplete+'/'+lineCount+' picked up</span>':'')+
+      '<span class="prog"><span class="lines">'+onSite+'/'+lineCount+' on site</span>'+ringSvg(pct)+'</span>'+completeBtn+'</div>'+
     '<div class="detail"><div class="table-scroll"><table><thead><tr><th>Line</th><th>Part #</th><th>Description</th><th>UoM</th><th>Required</th><th>Expected</th><th>Delivered</th><th>Pending</th><th>Picked up</th><th>Picked up by</th><th>Status</th>'+adminHead+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
       '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">'+
       '<button class="btn small secondary" data-print="'+t.issue+'">Print sheet</button>'+
@@ -865,7 +971,8 @@ function renderTracker(t){
 /* ---------- boot ---------- */
 function initTrades(){ const f=$("#fTrade"), sa=$("#setAllTrade");
   TRADES.forEach(t=>{ const o=document.createElement("option");o.value=t;o.textContent=t;f.appendChild(o);
-    const o2=document.createElement("option");o2.value=t;o2.textContent=t;sa.appendChild(o2); }); }
+    const o2=document.createElement("option");o2.value=t;o2.textContent=t;sa.appendChild(o2); });
+  fillCategoryFilter(); }
 function resetNewPanel(){ STATE.pendingOrders=null; STATE.existingReqs=null; $("#reqFile").value=""; $("#setAllTrade").value=""; renderPreview(); }
 function bind(){
   $("#adminBtn").addEventListener("click", adminUnlock);
@@ -948,7 +1055,7 @@ function bind(){
   });
   $("#backfillBtn").addEventListener("click", async ()=>{
     const cands=backfillCandidates(); if(!cands.length) return;
-    if(!window.confirm("Backfill the Transaction Originator onto "+cands.length+" already-tracked order"+(cands.length===1?"":"s")+" from this file?")) return;
+    if(!window.confirm("Backfill the Buyer onto "+cands.length+" already-tracked order"+(cands.length===1?"":"s")+" from this file?")) return;
     $("#backfillBtn").disabled=true;
     let ok=0, fail=0;
     for(let i=0;i<cands.length;i++){
@@ -970,7 +1077,7 @@ function bind(){
   let qTimer;   // debounce search so we don't re-render the whole (large) list on every keystroke
   $("#q").addEventListener("input", ()=>{ clearTimeout(qTimer); qTimer=setTimeout(()=>{ STATE.page=1; render(); }, 180); });
   $("#fTrade").addEventListener("change", ()=>{ STATE.page=1; render(); });
-  $("#fOriginator").addEventListener("change", ()=>{ STATE.page=1; render(); });
+  $("#fCategory").addEventListener("change", ()=>{ STATE.page=1; render(); });
   $("#fFrom").addEventListener("change", ()=>{ STATE.page=1; render(); });
   $("#fTo").addEventListener("change", ()=>{ STATE.page=1; render(); });
   $("#todayBtn").addEventListener("click", ()=>{
@@ -982,7 +1089,7 @@ function bind(){
     $("#filtersBtn").setAttribute("aria-expanded", open?"true":"false");
   });
   $("#clearFilters").addEventListener("click", ()=>{
-    $("#fTrade").value=""; $("#fOriginator").value=""; $("#fFrom").value=""; $("#fTo").value="";
+    $("#fTrade").value=""; $("#fCategory").value=""; $("#fFrom").value=""; $("#fTo").value="";
     STATE.page=1; render();
   });
   $("#segActive").addEventListener("click", async ()=>{ STATE.state="open"; STATE.page=1; $("#segActive").setAttribute("aria-selected","true"); $("#segDone").setAttribute("aria-selected","false"); await loadTrackers(); render(); });
@@ -1082,6 +1189,22 @@ function bind(){
       }catch(err){ toast("Delete failed: "+err.message); }
       return;
     }
+    const delLine=e.target.closest("[data-delline]");
+    if(delLine){
+      const [issueStr,line]=delLine.getAttribute("data-delline").split("|");
+      const issue=parseInt(issueStr,10);
+      const t=STATE.trackers.find(x=>x.issue===issue);
+      const lineCount=(t&&t.marker&&t.marker.lines||[]).length;
+      if(lineCount<=1){ toast("This is the only line — use Delete order instead."); return; }
+      if(!window.confirm("Remove line "+line+" from this order? This can't be undone.")) return;
+      try{ toast("Removing line…"); const res=await deleteLine(issue, line);
+        const idx=STATE.trackers.findIndex(x=>x.issue===issue); invalidateCache();
+        if(res.complete){ if(idx>=0) STATE.trackers.splice(idx,1); toast("Line removed — tracker complete"); render(); }
+        else { if(idx>=0 && res.tracker) STATE.trackers[idx]=res.tracker; toast("Line removed"); render();
+          const card=document.querySelector('.trk[data-issue="'+issue+'"]'); if(card) card.classList.add("open"); }
+      }catch(err){ toast("Remove failed: "+err.message); }
+      return;
+    }
     const prt=e.target.closest("[data-print]");
     if(prt){
       const issue=parseInt(prt.getAttribute("data-print"),10);
@@ -1118,10 +1241,304 @@ function bind(){
     if(tog){ tog.closest(".trk").classList.toggle("open"); }
   });
 }
+/* ============================ Receiving (MRR / EJDE reconciliation) ============================
+   Parse the Hubble MRR export (received material), reconcile against the delivery
+   trackers by Unique Identifier (Order#-Line#), and keep a persistent receipt log
+   (data/receiving.json, each receipt carrying a sequential Ref ID). No cost is ever
+   read or stored. */
+const MRR_COLS = { branch:"Branch/Plant", order:"Order Number", origOrder:"Original Order #",
+  line:"Line Number", desc:"Description", desc2:"Description 2", supplier:"Supplier",
+  ordered:"Quantity Ordered", received:"Quantity Received", date:"Received Date",
+  mrr:"MRR #", container:"Container ID", location:"Location" };   /* Amount Received (cost) intentionally never mapped */
+async function parseMrrXlsx(file){
+  const zip=readXlsxIndex(await file.arrayBuffer());
+  const wb=await zip.get("xl/workbook.xml");
+  const rels=await zip.get("xl/_rels/workbook.xml.rels");
+  const shared=parseShared(await zip.get("xl/sharedStrings.xml"));
+  const relMap={};
+  for(const m of rels.matchAll(/<Relationship\s+[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"/g)) relMap[m[1]]=m[2];
+  const rows=sheetRows(await zip.get(firstSheetPath(wb,relMap))||"", shared);
+  if(!rows.length) throw new Error("The MRR sheet is empty");
+  const norm=s=>String(s||"").replace(/\s+/g," ").trim().toLowerCase();
+  const hdrNorm=rows[0].map(norm); const col=n=>hdrNorm.indexOf(norm(n));
+  const iOrder=col(MRR_COLS.order);
+  if(iOrder<0) throw new Error('MRR header "Order Number" not found. Is this the MRR export?');
+  const iBranch=col(MRR_COLS.branch), iOrig=col(MRR_COLS.origOrder), iLine=col(MRR_COLS.line),
+        iDesc=col(MRR_COLS.desc), iD2=col(MRR_COLS.desc2), iSup=col(MRR_COLS.supplier),
+        iOrd=col(MRR_COLS.ordered), iRcv=col(MRR_COLS.received), iDate=col(MRR_COLS.date),
+        iMrr=col(MRR_COLS.mrr), iCont=col(MRR_COLS.container), iLoc=col(MRR_COLS.location);
+  const codes=await siteCodes();
+  const siteOk=row=>{ if(!codes.length||iBranch<0) return true; const bp=String(row[iBranch]||"").trim(); return codes.some(c=>bp.startsWith(c)); };
+  const out=[];
+  for(let r=1;r<rows.length;r++){
+    const row=rows[r]; const orderNo=_digits(iOrder>=0?row[iOrder]:""); if(!orderNo) continue;
+    if(!siteOk(row)) continue;
+    const line=String(iLine>=0?cleanNum(row[iLine]):"").trim();
+    const d1=iDesc>=0?String(row[iDesc]||"").trim():""; const d2=iD2>=0?String(row[iD2]||"").trim():"";
+    const oRaw=iOrd>=0?cleanNum(row[iOrd]):""; const rRaw=iRcv>=0?cleanNum(row[iRcv]):"";
+    out.push({ uid:orderNo+"-"+line, orderNo, line,
+      desc:d1+(d2?(" "+d2):""), req:iOrig>=0?_digits(row[iOrig]):"",
+      supplier:iSup>=0?String(row[iSup]||"").trim():"", trade:iLoc>=0?normTrade(row[iLoc]):"",
+      ordered:(oRaw!=="" && isFinite(Number(oRaw)))?Number(oRaw):0,
+      received:(rRaw!=="" && isFinite(Number(rRaw)))?Number(rRaw):0,
+      date:iDate>=0?excelSerialToISO(row[iDate]):"", mrr:iMrr>=0?String(row[iMrr]||"").trim():"",
+      slip:iCont>=0?String(row[iCont]||"").trim():"" });
+  }
+  if(!out.length) throw new Error("No MRR rows found for this site.");
+  return out;
+}
+/* uid (Order#-Line#) -> {expected, delivered, req, issue, line} across ALL trackers
+ * (open+closed). issue/line let the EJDE→tracker sync post a top-up to the right line. */
+function recvTrackerIndex(trackers){
+  const idx=new Map();
+  for(const t of trackers||[]){
+    for(const l of ((t.marker&&t.marker.lines)||[])){
+      if(!l.orderNo) continue;
+      const uid=_digits(l.orderNo)+"-"+String(l.line);
+      const delivered=(l.deliveries||[]).reduce((s,d)=>s+(Number(d.qty)||0),0);
+      const exp=(l.expected==null||l.expected==="")?null:Number(l.expected);
+      idx.set(uid,{expected:exp,delivered,req:t.reqNumber,issue:t.issue,line:l.line});
+    }
+  }
+  return idx;
+}
+async function loadReceiving(){
+  try{ const r=await fetch("data/receiving.json",{cache:"no-store"}); STATE.receiving=r.ok?(await r.json()):{records:[]}; }
+  catch(e){ STATE.receiving={records:[]}; }
+}
+function recvRows(){
+  const recs=(STATE.receiving&&STATE.receiving.records)||[]; const idx=STATE.recvTrkIndex||new Map();
+  const rows=[]; const seen=new Set();
+  // JDE Open / status are LINE-level: a line can be filled by several receipts
+  // (different MRR#s), so total received across all receipts of a Unique ID is
+  // what determines how much is still open — not any single receipt.
+  const recvByUid=new Map(), ordByUid=new Map();
+  for(const r of recs){ const u=r.uid;
+    recvByUid.set(u,(recvByUid.get(u)||0)+(Number(r.received)||0));
+    ordByUid.set(u,Math.max(ordByUid.get(u)||0,Number(r.ordered)||0)); }
+  for(const r of recs){
+    seen.add(r.uid); const tl=idx.get(r.uid);
+    const ordered=ordByUid.get(r.uid)||0, totRecv=recvByUid.get(r.uid)||0;
+    const jdeOpen=Math.max(0, ordered-totRecv);   // line-level: ordered minus ALL receipts for this line
+    const trkOpen=tl?(tl.expected==null?null:tl.expected-tl.delivered):null;
+    const status = totRecv<=0 ? "Open — nothing received"
+      : jdeOpen>0 ? "Partially received"
+      : "Completed";   /* line fully received across all its receipts */
+    rows.push({refId:r.refId, uid:r.uid, desc:r.desc, req:(tl&&tl.req)||r.req, supplier:r.supplier, trade:r.trade,
+      ordered:ordered, received:Number(r.received)||0, jdeOpen, trkOpen, date:r.date, mrr:r.mrr, slip:r.slip, status});
+  }
+  for(const [uid,tl] of idx){   // tracker lines never received -> Missing
+    if(seen.has(uid)) continue;
+    rows.push({refId:"", uid, desc:"", req:tl.req, supplier:"", trade:"", ordered:tl.expected||0, received:0,
+      jdeOpen:tl.expected||0, trkOpen:tl.expected==null?null:tl.expected-tl.delivered, date:"", mrr:"", slip:"",
+      status:"Missing — no EJDE receipt"});
+  }
+  return rows;
+}
+function renderReceiving(){
+  const q=($("#rq").value||"").trim().toLowerCase(), sf=$("#rStatus").value, tf=$("#rTrade").value;
+  let rows=recvRows();
+  const counts={}; rows.forEach(r=>counts[r.status]=(counts[r.status]||0)+1);
+  if(sf) rows=rows.filter(r=>r.status===sf);
+  if(tf) rows=rows.filter(r=>r.trade===tf);
+  if(q) rows=rows.filter(r=>[r.refId,r.uid,r.mrr,r.desc,r.supplier,r.slip,r.req].some(x=>String(x||"").toLowerCase().includes(q)));
+  const miss=counts["Missing — no EJDE receipt"]||0, part=counts["Partially received"]||0, done=counts["Completed"]||0, open0=counts["Open — nothing received"]||0;
+  $("#recvSummary").innerHTML = rows.length+" shown &middot; <strong>"+miss+"</strong> missing &middot; "+part+" partial &middot; "+done+" completed"+(open0?(" &middot; "+open0+" open"):"");
+  const num=v=>v===""||v==null?"":esc(v);
+  const cls=s=> s.startsWith("Missing")?"over": s.startsWith("Partially")?"soon": s.startsWith("Completed")?"done":"";
+  const total=rows.length, pages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+  if(STATE.recvPage>pages) STATE.recvPage=pages; if(!STATE.recvPage||STATE.recvPage<1) STATE.recvPage=1;
+  const start=(STATE.recvPage-1)*PAGE_SIZE, pageRows=rows.slice(start,start+PAGE_SIZE);
+  const body=pageRows.map(r=>
+    '<tr>'+
+      '<td>'+num(r.refId)+'</td><td><strong>'+esc(r.uid)+'</strong></td><td>'+esc(r.desc)+'</td>'+
+      '<td>'+esc(r.req)+'</td><td>'+esc(r.supplier)+'</td><td>'+esc(r.trade||"—")+'</td>'+
+      '<td>'+num(r.ordered)+'</td><td>'+num(r.received)+'</td><td>'+num(r.jdeOpen)+'</td>'+
+      '<td>'+(r.trkOpen==null?"—":num(r.trkOpen))+'</td><td>'+esc(r.date||"")+'</td>'+
+      '<td>'+esc(r.mrr||"")+'</td>'+
+      '<td>'+((STATE.admin && r.refId!=="") ? '<input class="slip-edit" data-ref="'+esc(r.refId)+'" value="'+esc(r.slip||"")+'" aria-label="Packing slip / BOL">' : esc(r.slip||""))+'</td>'+
+      '<td><span class="badge '+cls(r.status)+'">'+esc(r.status)+'</span></td>'+
+    '</tr>').join("");
+  $("#recvList").innerHTML='<table><thead><tr><th>Ref ID</th><th>Unique ID</th><th>Description</th><th>Req #</th><th>Supplier</th><th>Trade</th><th>Qty Ord</th><th>Qty Recv</th><th>JDE Open</th><th>Tracker Open</th><th>Date</th><th>MRR#</th><th>Packing Slip/BOL</th><th>Status</th></tr></thead><tbody>'+
+    (body||'<tr><td colspan="14" class="muted" style="padding:14px">No receiving records yet — import an MRR export.</td></tr>')+'</tbody></table>';
+  renderRecvPager(total,pages,start,pageRows.length);
+}
+function renderRecvPager(total,pages,start,shown){
+  const pager=$("#recvPager"); if(!pager) return;
+  if(!total){ pager.style.display="none"; return; }
+  pager.style.display="flex";
+  const sel=$("#recvPgSel"); let opts="";
+  for(let i=1;i<=pages;i++){ const s=(i-1)*PAGE_SIZE+1, e=Math.min(i*PAGE_SIZE,total); opts+='<option value="'+i+'"'+(i===STATE.recvPage?' selected':'')+'>'+s+'–'+e+'</option>'; }
+  sel.innerHTML=opts; sel.disabled=pages<=1;
+  $("#recvPgPrev").disabled=STATE.recvPage<=1; $("#recvPgNext").disabled=STATE.recvPage>=pages;
+  $("#recvPgInfo").textContent="Records "+(start+1)+"–"+(start+shown)+" of "+total;
+}
+function gotoRecvPage(n){ STATE.recvPage=n; renderReceiving(); const l=$("#recvList"); if(l) l.scrollIntoView({block:"start"}); }
+/* Raise on-site (Delivered) qty on matching tracker lines to what EJDE has received.
+ * Runs automatically after an MRR import.
+ *
+ * Match key is REQ# + line description — the identifiers that exist on BOTH sides for
+ * every tracker (Order#/Line# is absent on trackers built before that field was added):
+ *   - tracker side: the tracker's own req number + each line's description
+ *   - receiving side: the receipt's REQ# (MRR "Original Order #", col D, stored as .req)
+ *                     + description; EJDE received is summed across every receipt sharing
+ *                     that REQ#+description.
+ * For each matched material we raise the tracker line's on-site (Delivered) to the EJDE
+ * received total. Top-up only — we never lower a manually-logged delivery. When a single
+ * description maps to MORE THAN ONE line inside a req we cannot tell which line the
+ * receipts belong to, so we SKIP those (reported as `ambiguous`) rather than over-count.
+ * One /req/sync-received call per tracker issue. Idempotent: re-importing is a no-op.
+ * Returns {lines, orders, ambiguous}. */
+const _reqKey=s=>String(s==null?"":s).replace(/\D/g,"").replace(/^0+/,"");   // numeric REQ#, no padding
+const _descKey=s=>String(s==null?"":s).toLowerCase().replace(/[^a-z0-9]+/g,"");
+async function syncOnsiteFromEJDE(){
+  let trackers=STATE.recvTrackers||[];
+  if(!trackers.length){ try{ trackers=await fetchExistingTrackers(); STATE.recvTrackers=trackers; }catch(e){} }   // fallback: load if the view didn't
+  const recs=(STATE.receiving&&STATE.receiving.records)||[];
+  // tracker lines keyed by req#|desc — track collisions so ambiguous descs are skipped
+  const trkByKey=new Map();                            // "reqKey|descKey" -> [{issue,line,delivered}]
+  let trkLines=0;
+  for(const t of trackers){
+    const rq=_reqKey(t.reqNumber||(t.marker&&t.marker.reqNumber));
+    for(const l of ((t.marker&&t.marker.lines)||[])){
+      if(!rq) continue; const dk=_descKey(l.desc); if(!dk) continue; const k=rq+"|"+dk; trkLines++;
+      const delivered=(l.deliveries||[]).reduce((s,d)=>s+(Number(d.qty)||0),0);
+      if(!trkByKey.has(k)) trkByKey.set(k,[]);
+      trkByKey.get(k).push({issue:t.issue,line:l.line,delivered});
+    }
+  }
+  // EJDE received summed per req#|desc
+  const recvByKey=new Map(); let recsWithReq=0;
+  for(const r of recs){ const rq=_reqKey(r.req); if(!rq) continue; recsWithReq++; const k=rq+"|"+_descKey(r.desc); recvByKey.set(k,(recvByKey.get(k)||0)+(Number(r.received)||0)); }
+  const byIssue=new Map();                             // issue -> [{line, delivered}]
+  let ambiguous=0, matchedKeys=0;
+  for(const [k,total] of recvByKey){
+    const cand=trkByKey.get(k); if(!cand||!cand.length) continue;
+    matchedKeys++;
+    if(cand.length>1){ ambiguous+=cand.length; continue; }   // desc not unique in the req — skip
+    const tl=cand[0];
+    if(!(total>tl.delivered)) continue;                // top-up only
+    if(!byIssue.has(tl.issue)) byIssue.set(tl.issue,[]);
+    byIssue.get(tl.issue).push({line:tl.line, delivered:total});
+  }
+  const diag={trackers:trackers.length,trkLines,trkKeys:trkByKey.size,recs:recs.length,recsWithReq,recvKeys:recvByKey.size,matchedKeys};
+  try{ console.log("[EJDE sync]",JSON.stringify(diag)); }catch(e){}
+  if(!byIssue.size) return {lines:0,orders:0,ambiguous,diag};
+  let lines=0, orders=0;
+  for(const [issue,updates] of byIssue){
+    try{
+      const r=await fetch(wbase()+"/req/sync-received",{method:"POST",headers:{"Content-Type":"application/json","x-admin-key":adminKey()},body:JSON.stringify({issue,updates})});
+      const d=await r.json().catch(()=>({}));
+      if(r.ok&&d.ok&&d.synced){ lines+=d.synced; orders++; }
+    }catch(e){ /* skip this tracker — the others still sync */ }
+  }
+  return {lines,orders,ambiguous,diag};
+}
+/* Close every OPEN tracker that is now fully on site. The Worker auto-completes
+   trackers going forward as deliveries land; this reconciles the existing backlog
+   (e.g. lines brought on site by the EJDE sync). Admin only. Resumable and
+   idempotent: already-closed trackers drop out of the open list, so if a run is
+   interrupted the next one continues where it left off. Uses the same on-site
+   rule as the ring (trackerOnSite). Returns {closed, failed, total}. */
+async function sweepCompleteOnSite(){
+  if(!STATE.admin) return {closed:0,failed:0,total:0};
+  let open=[];
+  try{ const r=await fetch(wbase()+"/reqs?state=open",{cache:"no-store"}); if(r.ok){ const d=await r.json(); open=d.trackers||[]; } }catch(e){ return {closed:0,failed:0,total:0}; }
+  const done=open.filter(t=>{ const n=((t.marker&&t.marker.lines)||[]).length; return n>0 && trackerOnSite(t)===n; });
+  let closed=0, failed=0;
+  for(let i=0;i<done.length;i++){
+    banner("Completing on-site trackers "+(i+1)+" of "+done.length+"…  (keep this tab open)");
+    let ok=false;
+    for(let a=0;a<5 && !ok;a++){ if(a>0) await sleep(2000*Math.pow(2,a-1)); try{ await completeReq(done[i].issue); ok=true; }catch(e){} }   // backoff on GitHub throttle
+    ok ? closed++ : failed++;
+    if(i<done.length-1) await sleep(400);   // light pacing; retries absorb any secondary-limit 403s
+  }
+  banner("");
+  return {closed,failed,total:done.length};
+}
+async function runSweepOnSite(){
+  const btn=$("#sweepOnSite"); if(btn){ btn.disabled=true; btn.textContent="Completing…"; }
+  const s=await sweepCompleteOnSite();
+  if(btn){ btn.disabled=false; btn.textContent="Complete fully on-site trackers"; }
+  if(!s.total){ toast("No fully on-site trackers to complete"); }
+  else { toast("Completed "+s.closed+" fully on-site tracker"+(s.closed===1?"":"s")+(s.failed?(" · "+s.failed+" still pending — click again to finish"):"")); }
+  return s;
+}
+async function importMrr(){
+  if(!STATE.mrrPending||!STATE.mrrPending.length) return;
+  const btn=$("#mrrImport"); btn.disabled=true; btn.textContent="Importing…";
+  try{
+    const r=await fetch(wbase()+"/receiving",{method:"POST",headers:{"Content-Type":"application/json","x-admin-key":adminKey()},body:JSON.stringify({records:STATE.mrrPending})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok||!d.ok){ banner("Import failed: "+esc((d&&d.error)||("HTTP "+r.status))); btn.disabled=false; btn.textContent="Import to receiving log"; return; }
+    toast("Imported "+d.added+" new receipt"+(d.added===1?"":"s")+" ("+d.total+" total)");
+    STATE.mrrPending=null; $("#mrrFile").value=""; $("#mrrPreview").style.display="none";
+    btn.textContent="Import to receiving log";
+    await loadReceiving();
+    const sync=await syncOnsiteFromEJDE();             // pull EJDE received into on-site on matching trackers (REQ#+desc)
+    if(sync.lines){
+      const trackers=await fetchExistingTrackers();     // refresh so on-site reflects the top-ups
+      STATE.recvTrackers=trackers; STATE.recvTrkIndex=recvTrackerIndex(trackers);
+      toast("On-site synced from EJDE on "+sync.lines+" line"+(sync.lines===1?"":"s")+" across "+sync.orders+" tracker"+(sync.orders===1?"":"s")+(sync.ambiguous?(" · "+sync.ambiguous+" skipped (duplicate description)"):""));
+    } else {
+      const g=sync.diag||{};
+      if((g.matchedKeys||0)>0){
+        toast("On-site already up to date with EJDE"+(sync.ambiguous?(" · "+sync.ambiguous+" line"+(sync.ambiguous===1?"":"s")+" skipped (duplicate description)"):""));
+      } else {
+        banner("EJDE sync found no REQ# match — trackers:"+(g.trackers||0)+" · receipts w/REQ#:"+(g.recsWithReq||0)+" · overlap:0");
+      }
+    }
+    const swept=await sweepCompleteOnSite();            // auto-complete trackers now fully on site
+    if(swept.total){ toast("Completed "+swept.closed+" fully on-site tracker"+(swept.closed===1?"":"s")+(swept.failed?(" · "+swept.failed+" still pending — use “Complete fully on-site trackers”"):"")); }
+    renderReceiving();
+  }catch(e){ banner("Import failed: "+esc(e.message)); btn.disabled=false; btn.textContent="Import to receiving log"; }
+}
+async function enterReceiving(){
+  $("#newPanel").classList.remove("show");
+  document.querySelectorAll('main > .toolbar, main > .filterbar, #list, #pager').forEach(el=>{ if(el) el.style.display="none"; });
+  const mainEl=document.querySelector("main"); if(mainEl) mainEl.style.maxWidth="none";   // let the wide reconciliation table use the full page
+  $("#receivingView").style.display="block";
+  $("#recvAdmin").style.display = STATE.admin ? "block" : "none";
+  const tr=$("#rTrade"); TRADES.forEach(t=>{ const o=document.createElement("option"); o.value=t; o.textContent=t; tr.appendChild(o); });
+  // Persist the receiving filters so they survive leaving and returning to the view.
+  $("#rq").value=nsGet("recv_q")||""; $("#rStatus").value=nsGet("recv_status")||""; $("#rTrade").value=nsGet("recv_trade")||"";
+  $("#rq").addEventListener("input", ()=>{ nsSet("recv_q",$("#rq").value); clearTimeout(window._rqT); window._rqT=setTimeout(()=>{ STATE.recvPage=1; renderReceiving(); },180); });
+  $("#rStatus").addEventListener("change", ()=>{ nsSet("recv_status",$("#rStatus").value); STATE.recvPage=1; renderReceiving(); });
+  $("#rTrade").addEventListener("change", ()=>{ nsSet("recv_trade",$("#rTrade").value); STATE.recvPage=1; renderReceiving(); });
+  $("#recvPgPrev").addEventListener("click", ()=>{ if(STATE.recvPage>1) gotoRecvPage(STATE.recvPage-1); });
+  $("#recvPgNext").addEventListener("click", ()=>{ gotoRecvPage(STATE.recvPage+1); });
+  $("#recvPgSel").addEventListener("change", e=>{ gotoRecvPage(Number(e.target.value)||1); });
+  $("#mrrFile").addEventListener("change", async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    try{ toast("Reading MRR…"); STATE.mrrPending=await parseMrrXlsx(f);
+      const p=$("#mrrPreview"); p.style.display="block"; p.textContent=STATE.mrrPending.length+" receipt line"+(STATE.mrrPending.length===1?"":"s")+" for this site — ready to import";
+      $("#mrrImport").disabled=false;
+    }catch(err){ STATE.mrrPending=null; $("#mrrImport").disabled=true; banner("Could not read MRR: "+err.message); }
+  });
+  $("#mrrImport").addEventListener("click", importMrr);
+  $("#sweepOnSite").addEventListener("click", runSweepOnSite);
+  $("#recvList").addEventListener("change", async e=>{   // edit Packing Slip / BOL after posting
+    const inp=e.target.closest(".slip-edit"); if(!inp) return;
+    const refId=Number(inp.getAttribute("data-ref")), slip=inp.value.trim();
+    inp.disabled=true;
+    try{
+      const r=await fetch(wbase()+"/receiving/slip",{method:"POST",headers:{"Content-Type":"application/json","x-admin-key":adminKey()},body:JSON.stringify({refId,slip})});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok||!d.ok){ banner("Couldn't save BOL: "+esc((d&&d.error)||("HTTP "+r.status))); }
+      else { const rec=((STATE.receiving&&STATE.receiving.records)||[]).find(x=>Number(x.refId)===refId); if(rec) rec.slip=slip; toast("BOL updated"); }
+    }catch(err){ banner("Couldn't save BOL: "+esc(err.message)); }
+    inp.disabled=false;
+  });
+  const trackers=await fetchExistingTrackers();
+  STATE.recvTrackers=trackers; STATE.recvTrkIndex=recvTrackerIndex(trackers);
+  await loadReceiving();
+  renderReceiving();
+}
 async function init(){
   initTrades(); bind();
   STATE.adminName=nsGet("bac_admin_name")||"";
   if(nsGet("bac_admin_key")) setAdmin(true);   // stay logged in on this device (shared with the hub)
+  if(new URLSearchParams(location.search).get("view")==="receiving"){ await enterReceiving(); return; }
   if(STATE.admin && new URLSearchParams(location.search).get("admin")==="new"){ $("#newPanel").classList.add("show"); }
   const dq=new URLSearchParams(location.search).get("q"); if(dq){ $("#q").value=dq; }   // deep-link from Dashboard search
   await loadTrackers();
@@ -1158,5 +1575,6 @@ init();
     });
 })();
 </script>
+<script>(function(){try{var e=document.getElementById("railReceiving");if(!e)return;if(nsGet("bac_admin_key"))e.style.display="";if(/[?&]view=receiving/.test(location.search)){e.classList.add("active");var d=document.getElementById("railDeliveries");if(d)d.classList.remove("active");}}catch(_){}})();</script>
 </body>
 </html>
