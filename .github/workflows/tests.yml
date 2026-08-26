@@ -1,0 +1,37 @@
+name: tests
+
+# Runs the Python contract/build test suite on every PR (and on pushes to main)
+# so regressions are caught before merge. The suite uses only the standard
+# library, so no dependency install is needed beyond pytest itself.
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Run tests
+        run: python -m pytest build/tests -q
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Syntax-check the Worker
+        run: node --check worker/src/index.js
+
+      - name: Worker Teams-alert tests
+        run: node worker/tests/teams.test.mjs

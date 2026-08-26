@@ -73,6 +73,19 @@ def parse_marker(body):
     return json.loads(m.group(1)) if m else None
 
 
+def delete_line(m, line):
+    """Mirror of Worker postDeleteLine: drop one line by its `line` id, refusing
+    to remove the last remaining line. Returns (new_marker, complete)."""
+    lines = m.get("lines", [])
+    if not any(str(l["line"]) == str(line) for l in lines):
+        raise ValueError("no such line")
+    if len(lines) <= 1:
+        raise ValueError("cannot delete the only line")
+    kept = [l for l in lines if str(l["line"]) != str(line)]
+    new_m = {**m, "lines": kept}
+    return new_m, all(line_handled(l) for l in kept)
+
+
 SAMPLE = {
     "reqNumber": "244213", "trade": "Install", "project": "",
     "projectCode": "36620001127", "date": "",
@@ -134,3 +147,22 @@ def test_line_handled():
     assert line_handled(SAMPLE["lines"][0]) is False
     assert line_handled(SAMPLE["lines"][1]) is False   # delivered 10, picked 4
     assert line_handled({"deliveries": [{"qty": 10, "date": "d"}], "pickups": [{"qty": 10, "date": "d"}]}) is True
+
+
+def test_delete_line():
+    import pytest
+    # Drop the duplicate line (line 2), keeping the original — the case in the ask.
+    new_m, complete = delete_line(SAMPLE, 2)
+    assert [l["line"] for l in new_m["lines"]] == [1]
+    assert complete is False                              # line 1 not yet handled
+    # Removing the only remaining unhandled line completes the tracker.
+    handled = {"line": 1, "desc": "x", "deliveries": [{"qty": 5, "date": "d"}],
+               "pickups": [{"qty": 5, "date": "d"}]}
+    unhandled = {"line": 2, "desc": "y", "deliveries": [], "pickups": []}
+    _, complete2 = delete_line({"lines": [handled, unhandled]}, 2)
+    assert complete2 is True
+    # Guards: unknown line and last-line deletion both raise.
+    with pytest.raises(ValueError):
+        delete_line(SAMPLE, 99)
+    with pytest.raises(ValueError):
+        delete_line({"lines": [unhandled]}, 2)
