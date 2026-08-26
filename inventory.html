@@ -497,16 +497,16 @@ function banner(kind,msg){ const b=$("#banner"); if(!kind){ b.style.display="non
 
 /* ---------- data loading ---------- */
 async function loadMeta(){
-  try{ const r=await fetch("data/meta.json"); if(!r.ok) throw 0; const m=await r.json(); cacheSet("bac_portal_meta",m); return m; }
+  try{ const r=await fetch("data/meta.json",{cache:"no-store"}); if(!r.ok) throw 0; const m=await r.json(); cacheSet("bac_portal_meta",m); return m; }
   catch(e){ return cacheGet("bac_portal_meta"); }
 }
 async function loadSiteIndex(){
-  try{ const r=await fetch("data/sites.json"); if(!r.ok) throw 0; const s=await r.json(); cacheSet("bac_portal_sites",s); return s; }
+  try{ const r=await fetch("data/sites.json",{cache:"no-store"}); if(!r.ok) throw 0; const s=await r.json(); cacheSet("bac_portal_sites",s); return s; }
   catch(e){ return cacheGet("bac_portal_sites") || []; }
 }
 async function loadSite(code){
   try{
-    const r=await fetch("data/sites/"+encodeURIComponent(code)+".json"); if(!r.ok) throw 0;
+    const r=await fetch("data/sites/"+encodeURIComponent(code)+".json",{cache:"no-store"}); if(!r.ok) throw 0;
     const a=await r.json(); cacheSet("bac_portal_site_"+code,a); banner(null); return a;
   }catch(e){
     const c=cacheGet("bac_portal_site_"+code);

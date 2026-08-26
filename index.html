@@ -370,13 +370,13 @@ function bindGlobalSearch(){
 }
 async function loadDashboard(){
   let meta=null, sites=[];
-  try{ const r=await fetch("data/meta.json"); if(r.ok) meta=await r.json(); }catch(e){}
-  try{ const r=await fetch("data/sites.json"); if(r.ok) sites=await r.json(); }catch(e){}
+  try{ const r=await fetch("data/meta.json",{cache:"no-store"}); if(r.ok) meta=await r.json(); }catch(e){}
+  try{ const r=await fetch("data/sites.json",{cache:"no-store"}); if(r.ok) sites=await r.json(); }catch(e){}
   if(meta && meta.builtAt){ const el=$("#asof"); el.innerHTML=fmtUpdated(meta.builtAt); el.classList.add("show"); }
 
   let total=0, working=0, attention=0, unassigned=0;
   try{
-    const per=await Promise.all((sites||[]).map(s=>fetch("data/sites/"+encodeURIComponent(s.code)+".json").then(r=>r.ok?r.json():[]).catch(()=>[])));
+    const per=await Promise.all((sites||[]).map(s=>fetch("data/sites/"+encodeURIComponent(s.code)+".json",{cache:"no-store"}).then(r=>r.ok?r.json():[]).catch(()=>[])));
     per.forEach((as,i)=>{
       const site=(sites||[])[i]||{};
       (as||[]).forEach(a=>{
