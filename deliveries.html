@@ -6,6 +6,11 @@ window.__ns=location.pathname.replace(/[^/]*$/,"");
 function nsGet(k){try{return localStorage.getItem(window.__ns+k);}catch(e){return null;}}
 function nsSet(k,v){try{localStorage.setItem(window.__ns+k,v);}catch(e){}}
 function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
+/* Receiving, Remove line and Mark resolved call Worker routes added in the 1127
+   parity port. The 1168-panhandle Worker still runs the previous script, so those
+   controls stay hidden rather than failing with "not found". Flip to true once the
+   Worker is deployed from worker/src/index.js on main. */
+window.__WORKER_PORT_DEPLOYED=false;
 </script>
 
 <meta charset="UTF-8">
@@ -926,7 +931,7 @@ function renderTracker(t){
       ? '<td class="logcell">'+
           '<div class="ev"><span class="evlbl">Deliver</span><input class="dqty" type="text" inputmode="decimal" style="width:64px" placeholder="qty"><button class="btn small" data-ev="delivered|'+t.issue+'|'+esc(l.line)+'">Log</button></div>'+
           '<div class="ev"><span class="evlbl">Pickup</span><input class="pqty" type="text" inputmode="decimal" style="width:64px" placeholder="qty"><input class="pby" type="text" style="width:92px" placeholder="picked up by"><button class="btn small" data-ev="pickup|'+t.issue+'|'+esc(l.line)+'">Log</button></div>'+
-          '<div class="ev"><span class="evlbl"></span><button type="button" class="del-line" data-delline="'+t.issue+'|'+esc(l.line)+'">Remove line</button></div>'+
+          (window.__WORKER_PORT_DEPLOYED ? '<div class="ev"><span class="evlbl"></span><button type="button" class="del-line" data-delline="'+t.issue+'|'+esc(l.line)+'">Remove line</button></div>' : '')+
         '</td>'
       : '';
     // Intentional inline edit (Edit -> change -> Save), same pattern as pickup entries.
@@ -1538,7 +1543,7 @@ async function init(){
   initTrades(); bind();
   STATE.adminName=nsGet("bac_admin_name")||"";
   if(nsGet("bac_admin_key")) setAdmin(true);   // stay logged in on this device (shared with the hub)
-  if(new URLSearchParams(location.search).get("view")==="receiving"){ await enterReceiving(); return; }
+  if(window.__WORKER_PORT_DEPLOYED && new URLSearchParams(location.search).get("view")==="receiving"){ await enterReceiving(); return; }
   if(STATE.admin && new URLSearchParams(location.search).get("admin")==="new"){ $("#newPanel").classList.add("show"); }
   const dq=new URLSearchParams(location.search).get("q"); if(dq){ $("#q").value=dq; }   // deep-link from Dashboard search
   await loadTrackers();
@@ -1575,6 +1580,6 @@ init();
     });
 })();
 </script>
-<script>(function(){try{var e=document.getElementById("railReceiving");if(!e)return;if(nsGet("bac_admin_key"))e.style.display="";if(/[?&]view=receiving/.test(location.search)){e.classList.add("active");var d=document.getElementById("railDeliveries");if(d)d.classList.remove("active");}}catch(_){}})();</script>
+<script>(function(){try{var e=document.getElementById("railReceiving");if(!e)return;if(window.__WORKER_PORT_DEPLOYED&&nsGet("bac_admin_key"))e.style.display="";if(/[?&]view=receiving/.test(location.search)){e.classList.add("active");var d=document.getElementById("railDeliveries");if(d)d.classList.remove("active");}}catch(_){}})();</script>
 </body>
 </html>
