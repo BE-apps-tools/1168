@@ -50,6 +50,8 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
     border-top:none;border-left:none;transform:rotate(45deg);}
   .ic-admin::before{content:"";box-sizing:border-box;position:absolute;left:5px;top:1px;width:10px;height:8px;border:2px solid currentColor;border-bottom:none;border-radius:5px 5px 0 0;}
   .ic-admin::after{content:"";box-sizing:border-box;position:absolute;left:3px;top:8px;width:14px;height:11px;background:currentColor;border-radius:2px;}
+    .ic-recv::before{content:"";box-sizing:border-box;position:absolute;left:1px;top:11px;width:18px;height:8px;border:2px solid currentColor;border-top:none;border-radius:0 0 3px 3px;}
+  .ic-recv::after{content:"";box-sizing:border-box;position:absolute;left:7px;top:2px;width:6px;height:6px;border:2px solid currentColor;border-top:none;border-left:none;transform:rotate(45deg);}
   .ic-guide::before{content:"";box-sizing:border-box;position:absolute;left:1px;top:2px;width:18px;height:16px;border:2px solid currentColor;border-radius:2px;}
   .ic-guide::after{content:"";position:absolute;left:9px;top:2px;width:2px;height:16px;background:currentColor;}
   .rail-lbl{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:9px;letter-spacing:0.04em;display:block;}
@@ -144,6 +146,8 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
   .req-main strong{color:var(--dark-blue);}
   .req-sn{color:var(--medium-gray);font-size:12px;}
   .req-meta{color:var(--medium-gray);font-size:12px;}
+  .req-date{flex:0 0 auto;font-family:'Arial Black', Arial, sans-serif;font-size:10px;letter-spacing:0.03em;text-transform:uppercase;
+    color:var(--medium-gray);background:var(--bright-gray);border:1px solid var(--light-gray);border-radius:999px;padding:4px 10px;white-space:nowrap;}
   .req-chev{flex:0 0 auto;width:8px;height:8px;border-right:2px solid var(--medium-gray);
     border-bottom:2px solid var(--medium-gray);transform:rotate(45deg);transition:transform .2s ease;}
   .req[open] > summary .req-chev{transform:rotate(-135deg);}
@@ -155,6 +159,11 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
   .rf-l{display:block;font-size:11px;color:var(--medium-gray);margin-bottom:2px;}
   .rf-v{font-size:13.5px;color:var(--dark-gray);}
   .rf-v strong{color:var(--dark-blue);}
+  .req-actions{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;}
+  .req-resolve{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:11px;letter-spacing:0.04em;
+    padding:9px 16px;border:1px solid var(--dark-blue);background:var(--dark-blue);color:var(--white);border-radius:var(--r-sm);cursor:pointer;}
+  .req-resolve:hover{background:var(--energy-blue);border-color:var(--energy-blue);}
+  .req-resolve:disabled{opacity:0.55;cursor:default;}
 
   /* ---------- Admin guide (signed-in only) ---------- */
   .guide-sec{margin-top:24px;}
@@ -241,7 +250,8 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
 </svg></a>
     <a class="rail-item" href="index.html"><span class="rail-ic ic-hub"></span><span class="rail-lbl">Dashboard</span></a>
     <a class="rail-item" href="inventory.html"><span class="rail-ic ic-assets"></span><span class="rail-lbl">Assets</span></a>
-    <a class="rail-item" href="deliveries.html"><span class="rail-ic ic-deliv"></span><span class="rail-lbl">Deliveries</span></a>
+    <a id="railDeliveries" class="rail-item" href="deliveries.html"><span class="rail-ic ic-deliv"></span><span class="rail-lbl">Deliveries</span></a>
+    <a id="railReceiving" class="rail-item" href="deliveries.html?view=receiving" style="display:none"><span class="rail-ic ic-recv"></span><span class="rail-lbl">Receiving</span></a>
     <a class="rail-item active" href="admin.html"><span class="rail-ic ic-admin"></span><span class="rail-lbl">Admin</span></a>
     <a class="rail-item" href="guide.html"><span class="rail-ic ic-guide"></span><span class="rail-lbl">Guide</span></a>
     <div class="rail-foot">BEI</div>
@@ -530,15 +540,17 @@ const GH_ISSUES = "https://api.github.com/repos/be-apps-tools/1168/issues?state=
 function labelsOf(it){ return (it.labels||[]).map(l => typeof l==="string" ? l : (l&&l.name)||""); }
 function parseMarker(body){ const m=/```json\s*({[\s\S]*?})\s*```/.exec(body||""); if(!m) return null; try{ return JSON.parse(m[1]); }catch(e){ return null; } }
 function field(body,label){ const m=new RegExp("\\*\\*"+label+":\\*\\*\\s*(.*)").exec(body||""); return m?m[1].trim():""; }
+/* The submitted note (Detail / reason) can span multiple lines, so capture
+   everything between **Detail:** and the next bold field / json marker / end. */
+function detailField(body){
+  const m=/\*\*Detail:\*\*[ \t]*([\s\S]*?)[ \t]*(?=\n\*\*[^*\n]+:\*\*|\n```|$)/.exec(body||"");
+  return m ? m[1].trim() : "";
+}
 async function fetchOpenIssues(){
   const r=await fetch(GH_ISSUES,{headers:{"Accept":"application/vnd.github+json"}});
   if(!r.ok) throw new Error("GitHub "+r.status);
   const a=await r.json();
   return Array.isArray(a)?a.filter(it=>!it.pull_request):[];
-}
-function detailField(body){
-  const m=/\*\*Detail:\*\*[ \t]*([\s\S]*?)[ \t]*(?=\n\*\*[^*\n]+:\*\*|\n```|$)/.exec(body||"");
-  return m ? m[1].trim() : "";
 }
 async function loadOpenRequests(){
   const w=$("#openReqsWrap");
@@ -560,6 +572,20 @@ async function loadOpenRequests(){
     return;
   }
   renderOpenReqs(reqs);
+  focusRequest();
+}
+/* Deep link from a Teams alert (admin.html?view=requests&issue=<n>): expand and
+   scroll to that one request once the list has rendered. Consumed after use so a
+   later Refresh doesn't yank the page around. */
+let FOCUS_ISSUE = 0;
+function focusRequest(){
+  if(!FOCUS_ISSUE) return;
+  const btn=document.querySelector('#openReqsWrap [data-resolve="'+FOCUS_ISSUE+'"]');
+  FOCUS_ISSUE=0;
+  const d=btn&&btn.closest("details.req");
+  if(!d) return;                       // already resolved, or not in the open list
+  d.open=true;
+  setTimeout(()=>d.scrollIntoView({behavior:"smooth",block:"center"}), 60);
 }
 function renderOpenReqs(reqs){
   const fact = (l,v)=> '<div class="rf"><span class="rf-l">'+l+'</span><span class="rf-v">'+v+'</span></div>';
@@ -568,7 +594,9 @@ function renderOpenReqs(reqs){
     const badge = isRe ? '<span class="badge">Reassign</span>' : '<span class="badge issue">Issue</span>';
     const change = isRe ? (esc(r.current||"(none)")+' &rarr; '+esc(r.requestedTrade||"?")) : 'Reported issue';
     const meta = [r.site, r.requester].filter(Boolean).map(esc).join(' &middot; ');
-    const submitted = r.created ? esc(String(r.created).slice(0,10)) : "—";
+    const subFmt = r.created ? (function(){ const p=String(r.created).slice(0,10).split("-"); return p.length===3?(p[1]+"-"+p[2]+"-"+p[0].slice(2)):String(r.created).slice(0,10); })() : "";
+    const submitted = subFmt ? esc(subFmt) : "—";
+    const dateChip = subFmt ? '<span class="req-date">Submitted '+esc(subFmt)+'</span>' : '';
     const note = r.detail
       ? '<div class="req-note"><span class="rf-l">Note from requester</span>'+esc(r.detail).replace(/\n/g,"<br>")+'</div>' : "";
     const facts =
@@ -583,9 +611,12 @@ function renderOpenReqs(reqs){
         '<span class="req-main"><strong>Unit '+esc(r.unit||"?")+'</strong> '+
           '<span class="req-sn">SN '+esc(r.serial||"—")+'</span> &middot; '+change+'</span>'+
         (meta?'<span class="req-meta">'+meta+'</span>':"")+
+        dateChip+
         '<span class="req-chev" aria-hidden="true"></span>'+
       '</summary>'+
-      '<div class="req-body">'+note+'<div class="req-facts">'+facts+'</div></div>'+
+      '<div class="req-body">'+note+'<div class="req-facts">'+facts+'</div>'+
+        '<div class="req-actions"><button class="req-resolve" data-resolve="'+r.number+'">Mark resolved</button></div>'+
+      '</div>'+
     '</details>';
   }).join("") : '<div class="rq-empty">No open change requests. Nothing to action right now.</div>';
   $("#openReqsWrap").innerHTML =
@@ -658,7 +689,37 @@ $("#adminZone").addEventListener("click", e=>{
   else if(e.target.closest("#openGuideBtn")) toggleGuide(e.target.closest("#openGuideBtn"));
   else if(e.target.closest("#openReqsBtn")) toggleReqs(e.target.closest("#openReqsBtn"));
 });
-$("#openReqsWrap").addEventListener("click", e=>{ if(e.target.closest("#rqRefresh")) loadOpenRequests(); });
+function toggleReqRow(row){
+  const item=row.closest(".reqitem"); if(!item) return;
+  const panel=item.querySelector(".reqdetail"); if(!panel) return;
+  const open=panel.hasAttribute("hidden");
+  if(open){ panel.removeAttribute("hidden"); row.setAttribute("aria-expanded","true"); }
+  else { panel.setAttribute("hidden",""); row.setAttribute("aria-expanded","false"); }
+}
+$("#openReqsWrap").addEventListener("click", e=>{
+  if(e.target.closest("#rqRefresh")){ loadOpenRequests(); return; }
+  const rb=e.target.closest("[data-resolve]"); if(rb){ resolveRequest(rb); return; }
+  const row=e.target.closest(".reqrow"); if(row) toggleReqRow(row);
+});
+async function resolveRequest(btn){
+  const issue=parseInt(btn.getAttribute("data-resolve"),10); if(!issue) return;
+  if(!window.confirm("Mark this request resolved? It will be closed and removed from the list.")) return;
+  btn.disabled=true; const orig=btn.textContent; btn.textContent="Resolving…";
+  try{
+    const r=await fetch(wbase()+"/request/resolve",{method:"POST",headers:{"Content-Type":"application/json","x-admin-key":adminKey()},body:JSON.stringify({issue})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok||!d.ok){ btn.disabled=false; btn.textContent=orig; alert("Couldn't resolve: "+((d&&d.error)||("HTTP "+r.status))); return; }
+    const det=btn.closest("details.req"); if(det) det.remove();   // optimistic: drop the row now
+    const h=document.querySelector("#openReqsWrap .card-head h3");   // decrement the count in the header
+    if(h){ const m=/\((\d+)\)/.exec(h.textContent); const n=m?Math.max(0,parseInt(m[1],10)-1):0;
+      h.textContent="Trade assignment requests"+(n?(" ("+n+")"):""); }
+    if(!document.querySelector("#openReqsWrap details.req")){ const c=document.querySelector("#openReqsWrap .reqcard"); if(c) c.insertAdjacentHTML("beforeend",'<div class="rq-empty">No open change requests. Nothing to action right now.</div>'); }
+  }catch(err){ btn.disabled=false; btn.textContent=orig; alert("Couldn't resolve: "+err.message); }
+}
+$("#openReqsWrap").addEventListener("keydown", e=>{
+  if(e.key!=="Enter" && e.key!==" ") return;
+  const row=e.target.closest(".reqrow"); if(row){ e.preventDefault(); toggleReqRow(row); }
+});
 $("#teamWrap").addEventListener("click", e=>{
   if(e.target.closest("#addAdminBtn")) addAdmin();
   else if(e.target.closest("#teamRetry")) loadTeam();
@@ -669,6 +730,16 @@ $("#accessWrap").addEventListener("click", e=>{
   else if(e.target.closest("#accPublic")) makePublic();
 });
 renderAdmin();
+/* ?view=requests opens the requests list straight away (Teams alerts link here).
+   Signed out, the page shows the admin sign-in card instead — as it should. */
+(function(){
+  const p=new URLSearchParams(location.search);
+  if(p.get("view")!=="requests") return;
+  FOCUS_ISSUE=parseInt(p.get("issue")||"",10)||0;
+  const btn=$("#openReqsBtn");
+  if(btn) toggleReqs(btn);
+})();
 </script>
+<script>(function(){try{var e=document.getElementById("railReceiving");if(!e)return;if(window.__RECEIVING_READY&&nsGet("bac_admin_key"))e.style.display="";if(/[?&]view=receiving/.test(location.search)){e.classList.add("active");var d=document.getElementById("railDeliveries");if(d)d.classList.remove("active");}}catch(_){}})();</script>
 </body>
 </html>

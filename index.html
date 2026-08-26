@@ -50,6 +50,8 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
     border-top:none;border-left:none;transform:rotate(45deg);}
   .ic-admin::before{content:"";box-sizing:border-box;position:absolute;left:5px;top:1px;width:10px;height:8px;border:2px solid currentColor;border-bottom:none;border-radius:5px 5px 0 0;}
   .ic-admin::after{content:"";box-sizing:border-box;position:absolute;left:3px;top:8px;width:14px;height:11px;background:currentColor;border-radius:2px;}
+    .ic-recv::before{content:"";box-sizing:border-box;position:absolute;left:1px;top:11px;width:18px;height:8px;border:2px solid currentColor;border-top:none;border-radius:0 0 3px 3px;}
+  .ic-recv::after{content:"";box-sizing:border-box;position:absolute;left:7px;top:2px;width:6px;height:6px;border:2px solid currentColor;border-top:none;border-left:none;transform:rotate(45deg);}
   .ic-guide::before{content:"";box-sizing:border-box;position:absolute;left:1px;top:2px;width:18px;height:16px;border:2px solid currentColor;border-radius:2px;}
   .ic-guide::after{content:"";position:absolute;left:9px;top:2px;width:2px;height:16px;background:currentColor;}
   .rail-lbl{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:9px;letter-spacing:0.04em;display:block;}
@@ -130,8 +132,13 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
   .gresults{display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:40;background:var(--white);
     border:1px solid var(--light-gray);border-radius:var(--r-sm);box-shadow:var(--shadow-lift);max-height:60vh;overflow-y:auto;}
   .gresults.show{display:block;}
-  .gr-head{font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:0.03em;color:var(--medium-gray);
+  .gr-head{position:sticky;top:0;font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:0.03em;color:var(--medium-gray);
     padding:9px 14px 5px;background:var(--bright-gray);}
+  .gr-head .n{float:right;text-transform:none;letter-spacing:0;font-weight:normal;}
+  /* "See all N in Assets" — the way out when a search matches more than the panel lists */
+  .gr-all{display:block;padding:10px 14px;border-bottom:1px solid var(--bright-gray);text-decoration:none;
+    font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:0.04em;color:var(--energy-blue);background:var(--bright-gray);}
+  .gr-all:hover{background:var(--light-blue);}
   .gr-item{display:block;padding:9px 14px;border-bottom:1px solid var(--bright-gray);text-decoration:none;color:var(--dark-gray);}
   .gr-item:hover{background:var(--light-blue);}
   .gr-main{display:block;font-weight:bold;color:var(--dark-blue);font-size:13px;}
@@ -213,7 +220,8 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
 </svg></a>
     <a class="rail-item active" href="index.html"><span class="rail-ic ic-hub"></span><span class="rail-lbl">Dashboard</span></a>
     <a class="rail-item" href="inventory.html"><span class="rail-ic ic-assets"></span><span class="rail-lbl">Assets</span></a>
-    <a class="rail-item" href="deliveries.html"><span class="rail-ic ic-deliv"></span><span class="rail-lbl">Deliveries</span></a>
+    <a id="railDeliveries" class="rail-item" href="deliveries.html"><span class="rail-ic ic-deliv"></span><span class="rail-lbl">Deliveries</span></a>
+    <a id="railReceiving" class="rail-item" href="deliveries.html?view=receiving" style="display:none"><span class="rail-ic ic-recv"></span><span class="rail-lbl">Receiving</span></a>
     <a class="rail-item" href="admin.html"><span class="rail-ic ic-admin"></span><span class="rail-lbl">Admin</span></a>
     <a class="rail-item" href="guide.html"><span class="rail-ic ic-guide"></span><span class="rail-lbl">Guide</span></a>
     <div class="rail-foot">BEI</div>
@@ -237,8 +245,8 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
       </div>
 
       <div class="gsearch">
-        <input type="text" id="gq" autocomplete="off" aria-label="Search assets or delivery trackers"
-          placeholder="Search assets (unit / serial / description) or trackers (Req # / part #)…">
+        <input type="text" id="gq" autocomplete="off" aria-label="Search assets by unit, serial, description or assigned employee, or delivery trackers by request or part number"
+          placeholder="Search assets (unit / serial / description / assigned) or trackers (Req # / part #)…">
         <div class="gresults" id="gresults"></div>
       </div>
 
@@ -318,19 +326,37 @@ function alertTile(lbl, num, sub, alert){
   return '<div class="kpi"><div class="grow"><div class="lbl">'+esc(lbl)+'</div><div class="num'+(alert?' alert':'')+'">'+esc(num)+'</div>'+
     (sub?'<div class="sub">'+esc(sub)+'</div>':'')+'</div></div>';
 }
-/* Global search: match assets (unit/serial/desc) and trackers (Req#/part). */
+/* Global search: match assets (unit/serial/desc/assigned) and trackers (Req#/part). */
+const G_ASSET_MAX = 50;    // the panel scrolls; anything past this goes to the Assets tab
+const G_TRACKER_MAX = 25;
+function grHead(label, shown, total){
+  return '<div class="gr-head">'+esc(label)+'<span class="n">'+
+    (shown<total ? (shown+" of "+total) : (total+" match"+(total===1?"":"es")))+'</span></div>';
+}
 function renderGResults(raw){
-  const el=$("#gresults"); const q=String(raw||"").trim().toLowerCase();
+  const el=$("#gresults"); const term=String(raw||"").trim(), q=term.toLowerCase();
   if(!q){ el.classList.remove("show"); el.innerHTML=""; return; }
-  const am=GS.assets.filter(a=>[a.unit,a.serial,a.description,a.description2].some(x=>String(x||"").toLowerCase().includes(q))).slice(0,8);
-  const tm=GS.trackers.filter(t=>String(t.reqNumber||"").toLowerCase().includes(q) || (t.parts||[]).some(p=>String(p||"").toLowerCase().includes(q))).slice(0,6);
+  const ahits=GS.assets.filter(a=>[a.unit,a.serial,a.description,a.description2,a.assigned].some(x=>String(x||"").toLowerCase().includes(q)));
+  const thits=GS.trackers.filter(t=>String(t.reqNumber||"").toLowerCase().includes(q) || (t.parts||[]).some(p=>String(p||"").toLowerCase().includes(q)));
+  const am=ahits.slice(0,G_ASSET_MAX), tm=thits.slice(0,G_TRACKER_MAX);
   if(!am.length && !tm.length){ el.innerHTML='<div class="gr-empty">No matches</div>'; el.classList.add("show"); return; }
   let html="";
-  if(am.length){ html+='<div class="gr-head">Assets</div>'+am.map(a=>
+  if(am.length){ html+=grHead("Assets", am.length, ahits.length)+am.map(a=>
     '<a class="gr-item" href="inventory.html?site='+encodeURIComponent(a.siteCode||"")+'&q='+encodeURIComponent(a.unit||"")+'">'+
       '<span class="gr-main">'+esc(a.unit)+(a.description?(' &middot; '+esc(a.description)):'')+'</span>'+
-      '<span class="gr-sub">'+esc(a.serial||"")+' &middot; '+esc(a.siteName||"")+' &middot; '+esc(a.trade||"Unassigned")+'</span></a>').join(""); }
-  if(tm.length){ html+='<div class="gr-head">Delivery trackers</div>'+tm.map(t=>
+      '<span class="gr-sub">'+esc(a.serial||"")+' &middot; '+esc(a.siteName||"")+' &middot; '+esc(a.trade||"Unassigned")+
+      (a.assigned?(' &middot; '+esc(a.assigned)):'')+'</span></a>').join("");
+    // Truncated: hand the whole result set to the Assets tab, which pages through it.
+    if(ahits.length>am.length){
+      const per=new Map();
+      ahits.forEach(a=>{ const k=String(a.siteCode||"");
+        const e=per.get(k)||{name:a.siteName||k, n:0}; e.n++; per.set(k,e); });
+      html+=[...per.entries()].sort((x,y)=>y[1].n-x[1].n).map(([code,e])=>
+        '<a class="gr-all" href="inventory.html?site='+encodeURIComponent(code)+'&q='+encodeURIComponent(term)+'">'+
+          'See all '+e.n+' at '+esc(e.name)+' &rarr;</a>').join("");
+    }
+  }
+  if(tm.length){ html+=grHead("Delivery trackers", tm.length, thits.length)+tm.map(t=>
     '<a class="gr-item" href="deliveries.html?q='+encodeURIComponent(t.reqNumber||"")+'">'+
       '<span class="gr-main">Req '+esc(t.reqNumber)+(t.trade?(' &middot; '+esc(t.trade)):'')+'</span>'+
       '<span class="gr-sub">'+esc((t.parts||[]).slice(0,4).join(", "))+'</span></a>').join(""); }
@@ -359,7 +385,8 @@ async function loadDashboard(){
         else if(st.indexOf("AV")!==0 && st.indexOf("AC")!==0) attention++;
         if(!String(a.trade||"")) unassigned++;
         GS.assets.push({ unit:a.unit, serial:a.serial, description:a.description, description2:a.description2,
-          trade:a.trade, siteCode:site.code, siteName:site.name });
+          trade:a.trade, assigned:(a.assignedEmployee==="0"?"":String(a.assignedEmployee||"")),   // "0" = nobody assigned
+          siteCode:site.code, siteName:site.name });
       });
     });
   }catch(e){}
@@ -428,5 +455,6 @@ loadDashboard();
     });
 })();
 </script>
+<script>(function(){try{var e=document.getElementById("railReceiving");if(!e)return;if(window.__RECEIVING_READY&&nsGet("bac_admin_key"))e.style.display="";if(/[?&]view=receiving/.test(location.search)){e.classList.add("active");var d=document.getElementById("railDeliveries");if(d)d.classList.remove("active");}}catch(_){}})();</script>
 </body>
 </html>

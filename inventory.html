@@ -49,6 +49,8 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
     border-top:none;border-left:none;transform:rotate(45deg);}
   .ic-admin::before{content:"";box-sizing:border-box;position:absolute;left:5px;top:1px;width:10px;height:8px;border:2px solid currentColor;border-bottom:none;border-radius:5px 5px 0 0;}
   .ic-admin::after{content:"";box-sizing:border-box;position:absolute;left:3px;top:8px;width:14px;height:11px;background:currentColor;border-radius:2px;}
+    .ic-recv::before{content:"";box-sizing:border-box;position:absolute;left:1px;top:11px;width:18px;height:8px;border:2px solid currentColor;border-top:none;border-radius:0 0 3px 3px;}
+  .ic-recv::after{content:"";box-sizing:border-box;position:absolute;left:7px;top:2px;width:6px;height:6px;border:2px solid currentColor;border-top:none;border-left:none;transform:rotate(45deg);}
   .ic-guide::before{content:"";box-sizing:border-box;position:absolute;left:1px;top:2px;width:18px;height:16px;border:2px solid currentColor;border-radius:2px;}
   .ic-guide::after{content:"";position:absolute;left:9px;top:2px;width:2px;height:16px;background:currentColor;}
   .rail-lbl{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:9px;letter-spacing:0.04em;display:block;}
@@ -176,6 +178,24 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
   .empty{padding:48px 20px;text-align:center;color:var(--medium-gray);background:var(--white);border:1px solid var(--light-gray);border-radius:var(--r);box-shadow:var(--shadow);}
   .empty .big{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;color:var(--light-gray);font-size:18px;margin-bottom:6px;}
   .showing{margin-top:10px;font-size:11px;color:var(--medium-gray);}
+  /* Hover-to-copy: a button appears in whatever cell the cursor is over */
+  [data-copy]{position:relative;}
+  /* Outline the cell the cursor has armed, so it's clear what Ctrl+C will take. */
+  [data-copy]:hover{box-shadow:inset 0 0 0 1px var(--energy-blue);}
+  /* Top-aligned: cells are vertical-align:top, so centring would leave the button
+     floating well below the value it copies in a tall row. */
+  .cpbtn{position:absolute;right:2px;top:5px;width:20px;height:20px;padding:0;
+    display:none;align-items:center;justify-content:center;cursor:pointer;color:var(--dark-blue);
+    background:var(--white);border:1px solid var(--light-gray);border-radius:4px;box-shadow:var(--shadow);}
+  [data-copy]:hover>.cpbtn{display:flex;}
+  .cpbtn:hover{background:var(--light-blue);border-color:var(--energy-blue);}
+  .cpbtn.done{background:var(--energy-blue);border-color:var(--energy-blue);color:var(--white);}
+  .cpbtn svg{display:block;pointer-events:none;}
+  /* Pager — walk long site lists a page at a time instead of capping the table */
+  .pager{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;}
+  .pager .pginfo{font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:0.05em;color:var(--dark-blue);padding:0 4px;}
+  .pager .pgsize{font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:0.06em;color:var(--medium-gray);margin-left:auto;}
+  .pager select{width:auto;min-width:90px;flex:0 0 auto;}
 
   /* My Requests */
   .req-item{border:1px solid var(--light-gray);border-left:4px solid var(--energy-blue);border-radius:var(--r-sm);background:var(--white);padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow);}
@@ -269,7 +289,8 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
 </svg></a>
     <a class="rail-item" href="index.html"><span class="rail-ic ic-hub"></span><span class="rail-lbl">Dashboard</span></a>
     <a class="rail-item active" href="inventory.html"><span class="rail-ic ic-assets"></span><span class="rail-lbl">Assets</span></a>
-    <a class="rail-item" href="deliveries.html"><span class="rail-ic ic-deliv"></span><span class="rail-lbl">Deliveries</span></a>
+    <a id="railDeliveries" class="rail-item" href="deliveries.html"><span class="rail-ic ic-deliv"></span><span class="rail-lbl">Deliveries</span></a>
+    <a id="railReceiving" class="rail-item" href="deliveries.html?view=receiving" style="display:none"><span class="rail-ic ic-recv"></span><span class="rail-lbl">Receiving</span></a>
     <a class="rail-item" href="admin.html"><span class="rail-ic ic-admin"></span><span class="rail-lbl">Admin</span></a>
     <a class="rail-item" href="guide.html"><span class="rail-ic ic-guide"></span><span class="rail-lbl">Guide</span></a>
     <div class="rail-foot">BEI</div>
@@ -317,7 +338,7 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
         </div>
         <section class="inv-stats" id="invStats" style="display:none;" aria-label="Site summary"></section>
         <div class="toolbar">
-          <div class="search"><input type="text" id="q" aria-label="Search assets by unit or serial number, or description" placeholder="Search Unit # or Serial # or description…" autocomplete="off"></div>
+          <div class="search"><input type="text" id="q" aria-label="Search assets by unit or serial number, description, or assigned employee" placeholder="Search Unit # or Serial # or description or assigned…" autocomplete="off"></div>
           <select id="fTrade"><option value="">All trades</option></select>
           <select id="fStatus"><option value="">All statuses</option></select>
           <button class="btn small secondary" id="exportCsv">Export CSV</button>
@@ -340,6 +361,20 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
           </table>
         </div>
         <div class="empty" id="invEmpty" style="display:none;"></div>
+        <div class="pager" id="pager" style="display:none;" aria-label="Table pages">
+          <button class="btn small secondary" id="pgFirst" title="First page" aria-label="First page">&laquo;</button>
+          <button class="btn small secondary" id="pgPrev" title="Previous page" aria-label="Previous page">&lsaquo; Prev</button>
+          <span class="pginfo" id="pgInfo" aria-live="polite"></span>
+          <button class="btn small secondary" id="pgNext" title="Next page" aria-label="Next page">Next &rsaquo;</button>
+          <button class="btn small secondary" id="pgLast" title="Last page" aria-label="Last page">&raquo;</button>
+          <label class="pgsize" for="pgSize">Per page</label>
+          <select id="pgSize" aria-label="Rows per page">
+            <option value="50">50</option>
+            <option value="100" selected>100</option>
+            <option value="250">250</option>
+            <option value="500">500</option>
+          </select>
+        </div>
         <div class="showing" id="showing"></div>
       </section>
 
@@ -419,7 +454,7 @@ const TRADES = ["Civil","Electrical","Foundation","Collection","Install","Mechan
 let WORKER_URL = "https://1168-panhandle.site-asset-manager.workers.dev";
 let SUBMIT_KEY = "Panhandle-solar1168";   // spam deterrent; matches the Worker's SUBMIT_KEY var
 
-const STATE = { site:"", assets:[], meta:null, siteIndex:[], admin:false, adminName:"", pendingInventory:null, selected:new Set(), sort:null, ready:false };
+const STATE = { site:"", assets:[], meta:null, siteIndex:[], admin:false, adminName:"", pendingInventory:null, selected:new Set(), sort:null, page:1, ready:false };
 let REQ_TARGET = null;
 let OPEN_REQ = {};                    // "unit|serial" -> [ {issue,url,type,requestedTrade} ]
 const rkey = (u,s) => u + "|" + s;
@@ -448,6 +483,12 @@ function fmtUpdated(iso){
 /* ---------- storage / cache ---------- */
 function cacheSet(k,v){ try{ nsSet(k, JSON.stringify(v)); }catch(e){} }
 function cacheGet(k){ try{ const v=nsGet(k); return v?JSON.parse(v):null; }catch(e){ return null; } }
+
+/* Remember the picked site on this device so it survives leaving the Assets tab
+   and coming back (the rail links carry no query string). */
+const SITE_KEY = "bac_portal_site";
+function rememberSite(code){ if(code) cacheSet(SITE_KEY, String(code)); else nsDel(SITE_KEY); }
+function rememberedSite(){ const v=cacheGet(SITE_KEY); return v==null?"":String(v); }
 
 /* ---------- toast + banner ---------- */
 let toastT=null;
@@ -514,7 +555,87 @@ function renderStats(){
   });
 }
 
+/* ---------- hover-to-copy ----------
+   Cells opt in with data-copy="<exact value>". One shared button is parked in
+   whichever cell the cursor is over — with hundreds of rows on screen, a button
+   per cell would mean thousands of idle nodes. Ctrl/Cmd+C copies the hovered
+   cell too, unless the user has an actual text selection (that wins). */
+function cpAttr(v){ const s=String(v==null?"":v).trim(); return s? ' data-copy="'+esc(s)+'"' : ""; }
+let CP_CELL=null, CP_BTN=null;
+function cpButton(){
+  if(CP_BTN) return CP_BTN;
+  const b=document.createElement("button");
+  b.type="button"; b.className="cpbtn";
+  b.innerHTML='<svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true">'+
+    '<rect x="5.6" y="5.6" width="8.8" height="9.8" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.6"/>'+
+    '<path d="M11 3.4H4.2a1.6 1.6 0 0 0-1.6 1.6v6.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+  b.addEventListener("click", e=>{
+    e.preventDefault(); e.stopPropagation();          // never toggle the row's detail panel
+    if(CP_CELL) copyValue(CP_CELL.getAttribute("data-copy"), b);
+  });
+  CP_BTN=b; return b;
+}
+/* Move the shared button into `cell` (null parks it nowhere). */
+function cpPark(cell){
+  if(cell===CP_CELL) return;
+  CP_CELL=cell;
+  const b=cpButton();
+  b.classList.remove("done");
+  if(!cell){ if(b.parentNode) b.parentNode.removeChild(b); return; }
+  // The button can cover the tail of a value in a narrow column — name it in the
+  // tooltip (and the toast) so there's never doubt about what gets copied.
+  const v=cell.getAttribute("data-copy")||"";
+  const label="Copy "+(v.length>60?v.slice(0,60)+"…":v);
+  b.title=label+" (or Ctrl+C while hovering)"; b.setAttribute("aria-label",label);
+  cell.appendChild(b);
+}
+function copyFallback(s){                             // no async clipboard (http, older browsers)
+  try{
+    const ta=document.createElement("textarea");
+    ta.value=s; ta.setAttribute("readonly","");
+    ta.style.position="fixed"; ta.style.top="-1000px";
+    document.body.appendChild(ta); ta.select();
+    const ok=document.execCommand("copy");
+    ta.remove();
+    return ok;
+  }catch(e){ return false; }
+}
+async function copyValue(text, btn){
+  const s=String(text==null?"":text);
+  if(!s) return;
+  let ok=false;
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(s); ok=true; }
+  }catch(e){ /* denied or insecure context — fall through */ }
+  if(!ok) ok=copyFallback(s);
+  if(!ok){ toast("Couldn't copy — select the text and press Ctrl+C"); return; }
+  toast("Copied " + (s.length>44 ? s.slice(0,44)+"…" : s));
+  if(btn){ btn.classList.add("done"); setTimeout(()=>btn.classList.remove("done"), 900); }
+}
+function bindCopy(){
+  const panel=$("#panel-inv");
+  panel.addEventListener("mouseover", e=>{
+    const c=e.target.closest("[data-copy]");
+    cpPark(panel.contains(c) ? c : null);
+  });
+  panel.addEventListener("mouseleave", ()=>cpPark(null));
+  document.addEventListener("keydown", e=>{
+    if((e.key!=="c" && e.key!=="C") || !(e.ctrlKey||e.metaKey) || e.shiftKey || e.altKey) return;
+    if(!CP_CELL) return;
+    const t=e.target;
+    if(t && (t.tagName==="INPUT" || t.tagName==="TEXTAREA" || t.isContentEditable)) return;
+    const sel=window.getSelection && String(window.getSelection()).trim();
+    if(sel) return;                                   // a real selection copies itself
+    e.preventDefault();
+    copyValue(CP_CELL.getAttribute("data-copy"), CP_BTN);
+  });
+}
+
 /* ---------- inventory ---------- */
+/* "0" is the Equipment Master's placeholder for "nobody assigned" — never show,
+   match, or sort on it. Used by the table, search, sort and CSV export alike. */
+function assignedOf(a){ return a.assignedEmployee==="0" ? "" : String(a.assignedEmployee||""); }
+function sortVal(a,key){ return key==="assignedEmployee" ? assignedOf(a) : (a[key]==null?"":String(a[key])); }
 function viewAssets(){
   const q=$("#q").value.trim().toLowerCase();
   const tf=$("#fTrade").value, sf=$("#fStatus").value;
@@ -522,11 +643,11 @@ function viewAssets(){
   if(tf===TRADE_NONE) v=v.filter(a=>!String(a.trade||"").trim());
   else if(tf) v=v.filter(a=>a.trade===tf);
   if(sf) v=v.filter(a=>a.status===sf);
-  if(q) v=v.filter(a=>[a.unit,a.serial,a.description,a.description2].some(x=>String(x||"").toLowerCase().includes(q)));
+  if(q) v=v.filter(a=>[a.unit,a.serial,a.description,a.description2,assignedOf(a)].some(x=>String(x||"").toLowerCase().includes(q)));
   const s=STATE.sort;
   if(s && s.key){
     const dir = s.dir==="desc" ? -1 : 1;
-    v.sort((a,b)=>dir*String(a[s.key]==null?"":a[s.key]).localeCompare(String(b[s.key]==null?"":b[s.key]), undefined, {numeric:true, sensitivity:"base"}));
+    v.sort((a,b)=>dir*sortVal(a,s.key).localeCompare(sortVal(b,s.key), undefined, {numeric:true, sensitivity:"base"}));
   } else {
     v.sort((a,b)=>String(a.unit).localeCompare(String(b.unit), undefined, {numeric:true}));
   }
@@ -545,28 +666,54 @@ function updateSortHeaders(){
     if(STATE.sort && th.dataset.sort===STATE.sort.key){ th.classList.add("sorted"); if(STATE.sort.dir==="desc") th.classList.add("desc"); }
   });
 }
+/* ---------- paging ---------- */
+const PER_DEFAULT = 100;
+function perPage(){ const el=$("#pgSize"), n=el?parseInt(el.value,10):PER_DEFAULT; return n>0?n:PER_DEFAULT; }
+function pageCount(total){ return Math.max(1, Math.ceil(total/perPage())); }
+/* Jump to a page (clamped to what the current filters leave visible). */
+function gotoPage(p){
+  const pc=pageCount(viewAssets().length);
+  const next=Math.max(1, Math.min(Math.round(p)||1, pc));
+  if(next===STATE.page) return;
+  STATE.page=next; renderInventory(); syncUrl();
+  const ts=$("#panel-inv .table-scroll");
+  if(ts){ ts.scrollTop=0; ts.scrollIntoView({block:"start", behavior:"smooth"}); }
+}
+function renderPager(total, pc){
+  const bar=$("#pager"); if(!bar) return;
+  bar.style.display = total ? "flex" : "none";
+  $("#pgInfo").textContent = "Page " + STATE.page + " of " + pc;
+  const first=STATE.page<=1, last=STATE.page>=pc;
+  $("#pgFirst").disabled=first; $("#pgPrev").disabled=first;
+  $("#pgNext").disabled=last;   $("#pgLast").disabled=last;
+}
 function renderInventory(){
   updateSortHeaders();
+  cpPark(null);                          // the parked copy button is about to be thrown away
   const body=$("#invBody"); body.innerHTML="";
   const v=viewAssets();
   $("#invEmpty").style.display = STATE.assets.length? "none":"block";
   if(STATE.assets.length===0){ $("#invEmpty").innerHTML='<div class="big">No site selected</div><div>Choose a site above to view its equipment.</div>'; }
   else if(v.length===0){ $("#invEmpty").style.display="block"; $("#invEmpty").innerHTML='<div class="big">No matches</div><div>Adjust your search or filters.</div>'; }
-  const CAP=400;
-  const shown=v.slice(0,CAP);
+  const per=perPage(), pc=pageCount(v.length);
+  STATE.page=Math.max(1, Math.min(STATE.page, pc));   // filters may have shrunk the list under us
+  const start=(STATE.page-1)*per;
+  const shown=v.slice(start, start+per);
   shown.forEach((a,i)=>{
     const tr=document.createElement("tr"); tr.className="asset-row";
     const pend=(OPEN_REQ[rkey(a.unit,a.serial)]||[]);
     const pendBadge = pend.length ? '<span class="pending-badge" title="A change request is open for this asset">Pending</span> ' : '';
+    // Join only what's there — a missing maker used to render (and would copy) as "/ 25".
+    const mfg=[a.mfg, a.modelYear].map(x=>String(x==null?"":x).trim()).filter(Boolean).join(" / ");
     tr.innerHTML=
       '<td class="selcol"><input type="checkbox" class="rowsel" data-unit="'+esc(a.unit)+'" data-serial="'+esc(a.serial)+'"'+(STATE.selected.has(rkey(a.unit,a.serial))?' checked':'')+'></td>'+
-      '<td class="id">'+esc(a.unit)+'</td>'+
-      '<td>'+esc(a.serial)+'</td>'+
-      '<td class="desc">'+esc(a.description)+(a.description2?'<div class="d2">'+esc(a.description2)+'</div>':'')+'</td>'+
-      '<td>'+esc(a.mfg)+(a.modelYear?' / '+esc(a.modelYear):'')+'</td>'+
-      '<td class="status-cell">'+statusDot(a.status)+esc(a.status)+'</td>'+
-      '<td>'+(a.trade?'<span class="trade-badge">'+esc(a.trade)+'</span>':'<span class="trade-badge none">Unassigned</span>')+'</td>'+
-      '<td>'+esc(a.assignedEmployee==="0"?"":a.assignedEmployee)+'</td>'+
+      '<td class="id"'+cpAttr(a.unit)+'>'+esc(a.unit)+'</td>'+
+      '<td'+cpAttr(a.serial)+'>'+esc(a.serial)+'</td>'+
+      '<td class="desc"'+cpAttr(a.description)+'>'+esc(a.description)+(a.description2?'<div class="d2">'+esc(a.description2)+'</div>':'')+'</td>'+
+      '<td'+cpAttr(mfg)+'>'+esc(mfg)+'</td>'+
+      '<td class="status-cell"'+cpAttr(a.status)+'>'+statusDot(a.status)+esc(a.status)+'</td>'+
+      '<td'+cpAttr(a.trade)+'>'+(a.trade?'<span class="trade-badge">'+esc(a.trade)+'</span>':'<span class="trade-badge none">Unassigned</span>')+'</td>'+
+      '<td'+cpAttr(assignedOf(a))+'>'+esc(assignedOf(a))+'</td>'+
       '<td><div class="row-actions">'+pendBadge+'<button class="btn small" data-req-unit="'+esc(a.unit)+'" data-req-serial="'+esc(a.serial)+'">Request</button></div></td>';
     const detail=document.createElement("tr"); detail.className="detail-row"; detail.style.display="none";
     detail.innerHTML='<td colspan="9"><div class="detail-grid">'+
@@ -579,13 +726,17 @@ function renderInventory(){
     body.appendChild(tr); body.appendChild(detail);
   });
   updateBatchBar();
-  $("#showing").textContent = STATE.assets.length
-    ? ("Showing " + shown.length + " of " + v.length + " matches"
-        + (v.length > CAP ? " — refine your search to narrow this list" : "")
-        + " · " + STATE.assets.length + " total at site")
-    : "";
+  renderPager(v.length, pc);
+  $("#showing").textContent = !STATE.assets.length ? ""
+    : (v.length
+        ? ("Showing " + (start+1) + "–" + (start+shown.length) + " of " + v.length + " matches"
+            + " · " + STATE.assets.length + " total at site")
+        : ("No matches · " + STATE.assets.length + " total at site"));
 }
-function dt(k,val){ return '<div><span class="k">'+esc(k)+'</span><br>'+(val&&val!=="0"?esc(val):"&mdash;")+'</div>'; }
+function dt(k,val){
+  const has = val && val!=="0";
+  return '<div'+(has?cpAttr(val):"")+'><span class="k">'+esc(k)+'</span><br>'+(has?esc(val):"&mdash;")+'</div>';
+}
 
 function fillStatusFilter(){
   const sel=$("#fStatus"); sel.innerHTML='<option value="">All statuses</option>';
@@ -615,19 +766,25 @@ async function batchSubmit(){
   if(!window.confirm("Submit reassignment request → "+trade+" for "+todo.length+" asset"+(todo.length===1?"":"s")+"?"+(skipped?(" ("+skipped+" already open, skipped)"):""))) return;
   cacheSet("bac_portal_requester", requester);
   $("#batchSubmit").disabled=true;
-  let ok=0, fail=0;
+  let ok=0, unsent=0, failStatus=0;
   for(let i=0;i<todo.length;i++){
     const a=todo[i]; toast("Submitting "+(i+1)+"/"+todo.length+"…");
     const res=await submitRequest({ type:"reassign", site:STATE.site, unit:a.unit, serial:a.serial,
       description:a.description, currentTrade:a.trade||"", requestedTrade:trade,
       detail:"Batch reassignment to "+trade, requester });
-    if(res.ok||res.queued) ok++; else fail++;
+    if(res.ok||res.queued) ok++;
+    else {                         // a rejection hits every row alike — stop rather than hammer it
+      failStatus=res.status||0; unsent=todo.length-ok; break;
+    }
   }
-  STATE.selected.clear();
+  if(unsent) banner("err", (ok? ok+" submitted, then the remaining "+unsent+" stopped: "
+                              : "Nothing was submitted: ")+rejectHint(failStatus)+
+    ". Those assets are still selected — try again once that is resolved.");
+  else STATE.selected.clear();     // keep the selection when there is more to retry
   if(WORKER_URL){ await loadOpenRequests(STATE.site); }
   renderInventory(); renderMyRequests();
-  $("#batchSubmit").disabled=false; $("#batchTrade").value="";
-  toast("Submitted "+ok+" request"+(ok===1?"":"s")+(skipped?(" · "+skipped+" skipped"):"")+(fail?(" · "+fail+" failed"):""));
+  $("#batchSubmit").disabled=false; if(!unsent) $("#batchTrade").value="";
+  toast("Submitted "+ok+" request"+(ok===1?"":"s")+(skipped?(" · "+skipped+" skipped"):"")+(unsent?(" · "+unsent+" not sent"):""));
 }
 
 /* ---------- request flow ---------- */
@@ -672,39 +829,66 @@ function buildRequestPayload(){
 function logRequest(entry){
   const log=cacheGet("bac_portal_requests")||[]; log.unshift(entry); cacheSet("bac_portal_requests",log);
 }
+function queueRequest(p){
+  const q=cacheGet("bac_portal_queue")||[]; q.push(Object.assign({},p,{at:new Date().toISOString()})); cacheSet("bac_portal_queue",q);
+}
+/* Why a submit failed, in the user's terms — a rejection is not "offline". */
+function rejectHint(status){
+  if(status===401||status===403) return "the portal's submit key was rejected (an admin needs to check the Worker's SUBMIT_KEY)";
+  if(status===400) return "the server rejected the details; check the fields and try again";
+  if(status===404) return "the request endpoint wasn't found (an admin needs to check the Worker URL)";
+  return "the server refused it (" + status + ")";
+}
+/* Outcomes: {ok} created · {queued, offline} unreachable, retried later ·
+   {queued} transient server error, retried later · {rejected, status} refused —
+   retrying cannot help, so it is NOT queued and the user is told plainly. */
 async function submitRequest(p){
   // Pre-deploy / dev: no Worker configured -> keep a local-only log.
   if(!WORKER_URL){
     logRequest(Object.assign({},p,{issueNumber:0,url:"#(local)",at:new Date().toISOString()}));
     return {ok:true, local:true};
   }
+  let r;
   try{
-    const r=await fetch(wbase()+"/requests",{method:"POST",
+    r=await fetch(wbase()+"/requests",{method:"POST",
       headers:{"Content-Type":"application/json","x-submit-key":SUBMIT_KEY}, body:JSON.stringify(p)});
-    if(!r.ok) throw new Error("server "+r.status);
-    const d=await r.json();
-    logRequest(Object.assign({},p,{issueNumber:d.issueNumber,url:d.url,at:new Date().toISOString()}));
-    return {ok:true, issueNumber:d.issueNumber, url:d.url};
-  }catch(err){
-    const q=cacheGet("bac_portal_queue")||[]; q.push(Object.assign({},p,{at:new Date().toISOString()})); cacheSet("bac_portal_queue",q);
-    return {ok:false, queued:true};
+  }catch(err){                       // no response at all: offline, DNS, CORS, blocked
+    queueRequest(p);
+    return {ok:false, queued:true, offline:true};
   }
+  if(!r.ok){
+    if(r.status>=500 || r.status===429){ queueRequest(p); return {ok:false, queued:true, status:r.status}; }
+    return {ok:false, rejected:true, status:r.status};
+  }
+  // The Issue exists by now, so never re-queue past this point — that would duplicate it.
+  let d={}; try{ d=await r.json(); }catch(e){}
+  logRequest(Object.assign({},p,{issueNumber:d.issueNumber,url:d.url,at:new Date().toISOString()}));
+  return {ok:true, issueNumber:d.issueNumber, url:d.url};
 }
 async function flushQueue(){
   if(!WORKER_URL) return;
   const q=cacheGet("bac_portal_queue")||[]; if(!q.length) return;
-  const remain=[];
+  const remain=[]; let sent=0, dropped=0, lastStatus=0;
   for(const p of q){
+    let r;
     try{
-      const r=await fetch(wbase()+"/requests",{method:"POST",
+      r=await fetch(wbase()+"/requests",{method:"POST",
         headers:{"Content-Type":"application/json","x-submit-key":SUBMIT_KEY}, body:JSON.stringify(p)});
-      if(!r.ok) throw 0;
-      const d=await r.json();
-      logRequest(Object.assign({},p,{issueNumber:d.issueNumber,url:d.url}));
-    }catch(e){ remain.push(p); }
+    }catch(e){ remain.push(p); continue; }         // still unreachable — keep for next time
+    if(!r.ok){
+      if(r.status>=500 || r.status===429){ remain.push(p); }
+      else { dropped++; lastStatus=r.status; }     // refused: retrying forever would never clear it
+      continue;
+    }
+    let d={}; try{ d=await r.json(); }catch(e){}
+    logRequest(Object.assign({},p,{issueNumber:d.issueNumber,url:d.url}));
+    sent++;
   }
   cacheSet("bac_portal_queue",remain);
-  if(remain.length!==q.length) renderMyRequests();
+  if(sent||dropped) renderMyRequests();
+  if(sent) toast("Sent "+sent+" queued request"+(sent===1?"":"s"));
+  if(dropped) banner("err", dropped+" queued request"+(dropped===1?"":"s")+" could not be sent and "+
+    (dropped===1?"was":"were")+" discarded — "+rejectHint(lastStatus)+". Please submit again once that is fixed.");
 }
 /* Pending-request overlay (from the Worker's cached GET /requests). */
 async function loadOpenRequests(code){
@@ -915,7 +1099,35 @@ async function publishInventory(){
     toast("Published "+inv.meta.assetCount+" assets — live in ~1–2 min");
     banner("info","Inventory published ("+inv.meta.assetCount+" assets, "+inv.index.length+" sites). GitHub Pages rebuilds in ~1–2 minutes; refresh then.");
     STATE.pendingInventory=null; $("#emFile").value=""; renderEmPreview(); $("#importPanel").style.display="none";
+    const ar=await autoResolveOnPublish(inv);   // close reassign requests the new master now satisfies
+    if(ar.resolved){ toast("Auto-resolved "+ar.resolved+" reassignment request"+(ar.resolved===1?"":"s")+" — the master now matches");
+      if(STATE.site){ await loadOpenRequests(STATE.site); renderInventory(); } }   // refresh the pending-request overlay/badges
   }catch(err){ toast("Publish failed: "+err.message); $("#emPublish").disabled=false; }
+}
+/* After a publish, auto-close every open REASSIGN request whose requested trade
+ * now matches the just-published master for that unit+serial. Matches against the
+ * in-memory inv (immediate; the live data lags ~1–2 min behind Pages). Issue
+ * reports are never auto-resolved — they have no "done" signal. Admin only. */
+async function autoResolveOnPublish(inv){
+  const norm=t=>String(t||"").trim().toLowerCase();
+  const tradeByKey=new Map(); const sd=(inv&&inv.siteData)||{};
+  for(const code in sd){ for(const a of sd[code]){ tradeByKey.set(String(a.unit||"").trim()+"|"+String(a.serial||"").trim(), norm(a.trade)); } }
+  let issues=[];
+  try{ const r=await fetch("https://api.github.com/repos/be-apps-tools/1168/issues?state=open&per_page=100",{headers:{Accept:"application/vnd.github+json"}});
+    if(r.ok){ const a=await r.json(); issues=Array.isArray(a)?a.filter(it=>!it.pull_request):[]; } }catch(e){ return {resolved:0}; }
+  const marker=body=>{ const m=/```json\s*({[\s\S]*?})\s*```/.exec(body||""); if(!m) return null; try{ return JSON.parse(m[1]); }catch(_){ return null; } };
+  let resolved=0;
+  for(const it of issues){
+    const L=(it.labels||[]).map(x=>typeof x==="string"?x:x.name);
+    if(!L.includes("request:reassign")) continue;
+    const mk=marker(it.body)||{}; const rt=norm(mk.requestedTrade); if(!rt) continue;
+    const cur=tradeByKey.get(String(mk.unit||"").trim()+"|"+String(mk.serial||"").trim());
+    if(cur!=null && cur===rt){
+      try{ const rr=await fetch(wbase()+"/request/resolve",{method:"POST",headers:{"Content-Type":"application/json","x-admin-key":adminKey()},body:JSON.stringify({issue:it.number})}); if(rr.ok) resolved++; }catch(_){}
+      await new Promise(r=>setTimeout(r,300));   // light pacing for GitHub
+    }
+  }
+  return {resolved};
 }
 
 /* ---------- boot ---------- */
@@ -929,7 +1141,7 @@ function fillTradeControls(){
 }
 /* Load a site's assets + open requests and render (shared by the picker and deep-links). */
 async function selectSite(code){
-  STATE.site=code; STATE.selected.clear();
+  STATE.site=code; STATE.selected.clear(); rememberSite(code);
   if(!code){ STATE.assets=[]; OPEN_REQ={}; renderStats(); renderInventory(); $("#count").textContent=""; return; }
   $("#count").textContent="Loading…";
   $("#invEmpty").style.display="block";
@@ -948,6 +1160,8 @@ function syncUrl(){
   const tf=$("#fTrade").value; if(tf===TRADE_NONE) p.set("trade","unassigned"); else if(tf) p.set("trade",tf);
   const sf=$("#fStatus").value; if(sf) p.set("status",sf);
   if(STATE.sort && STATE.sort.key){ p.set("sort",STATE.sort.key); if(STATE.sort.dir==="desc") p.set("dir","desc"); }
+  if(STATE.page>1) p.set("page",String(STATE.page));
+  const per=perPage(); if(per!==PER_DEFAULT) p.set("per",String(per));
   const cur=new URLSearchParams(location.search); if(cur.get("admin")) p.set("admin",cur.get("admin"));
   const qs=p.toString();
   history.replaceState(null,"",location.pathname+(qs?("?"+qs):"")+location.hash);
@@ -962,7 +1176,7 @@ function exportCsv(){
     ["Company","company"],["Location","location"],["Location Code","locationCode"],["Transfer #","transferNumber"],
     ["Finance","financeMethod"],["Asset #","assetNumber"],["From Date","fromDate"],["Acquired","acquiredDate"],
     ["Additional Info","additionalInfo"],["Remarks","remarks"]];
-  const val=(a,k)=> k==="assignedEmployee" ? (a.assignedEmployee==="0"?"":a.assignedEmployee) : a[k];
+  const val=(a,k)=> k==="assignedEmployee" ? assignedOf(a) : a[k];
   const lines=[cols.map(c=>csvCell(c[0])).join(",")];
   v.forEach(a=>lines.push(cols.map(c=>csvCell(val(a,c[1]))).join(",")));
   const blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8;"});
@@ -975,6 +1189,7 @@ function exportCsv(){
 }
 function bind(){
   document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.panel)));
+  bindCopy();
   $("#emCancel").addEventListener("click", ()=>{ $("#importPanel").style.display="none"; STATE.pendingInventory=null; $("#emFile").value=""; renderEmPreview(); });
   $("#emFile").addEventListener("change", async e=>{
     const f=e.target.files[0]; if(!f) return;
@@ -982,18 +1197,23 @@ function bind(){
     catch(err){ STATE.pendingInventory=null; renderEmPreview(); banner("err","Could not read file: "+err.message); }
   });
   $("#emPublish").addEventListener("click", publishInventory);
-  $("#siteSelect").addEventListener("change", async e=>{ await selectSite(e.target.value); syncUrl(); });
+  $("#siteSelect").addEventListener("change", async e=>{ STATE.page=1; await selectSite(e.target.value); syncUrl(); });
   let qTimer=null;
-  $("#q").addEventListener("input", ()=>{ clearTimeout(qTimer); qTimer=setTimeout(()=>{ renderInventory(); syncUrl(); }, 180); });
-  $("#fTrade").addEventListener("change", ()=>{ renderInventory(); syncUrl(); });
-  $("#fStatus").addEventListener("change", ()=>{ renderInventory(); syncUrl(); });
+  $("#q").addEventListener("input", ()=>{ clearTimeout(qTimer); qTimer=setTimeout(()=>{ STATE.page=1; renderInventory(); syncUrl(); }, 180); });
+  $("#fTrade").addEventListener("change", ()=>{ STATE.page=1; renderInventory(); syncUrl(); });
+  $("#fStatus").addEventListener("change", ()=>{ STATE.page=1; renderInventory(); syncUrl(); });
   $("#exportCsv").addEventListener("click", exportCsv);
+  $("#pgFirst").addEventListener("click", ()=>gotoPage(1));
+  $("#pgPrev").addEventListener("click", ()=>gotoPage(STATE.page-1));
+  $("#pgNext").addEventListener("click", ()=>gotoPage(STATE.page+1));
+  $("#pgLast").addEventListener("click", ()=>gotoPage(pageCount(viewAssets().length)));
+  $("#pgSize").addEventListener("change", ()=>{ STATE.page=1; renderInventory(); syncUrl(); });
   document.querySelectorAll("thead th[data-sort]").forEach(th=>{
     th.addEventListener("click", ()=>{
       const k=th.dataset.sort;
       if(STATE.sort && STATE.sort.key===k){ STATE.sort.dir = STATE.sort.dir==="desc"?"asc":"desc"; }
       else { STATE.sort={key:k, dir:"asc"}; }
-      renderInventory(); syncUrl();
+      STATE.page=1; renderInventory(); syncUrl();
     });
   });
   $("#invBody").addEventListener("click", e=>{
@@ -1023,7 +1243,14 @@ function bind(){
     if(!p.detail){ toast("Add a detail/reason"); return; }
     cacheSet("bac_portal_requester", p.requester);
     const res=await submitRequest(p);
-    if(res.queued) toast("Saved offline — will send when back online");
+    if(res.rejected){
+      toast("Not submitted — "+rejectHint(res.status));
+      banner("err","Unit "+p.unit+" was NOT submitted: "+rejectHint(res.status)+". Nothing was saved — try again once that is resolved.");
+      return;                                   // stay on the form so the details aren't lost
+    }
+    if(res.queued) toast(res.offline
+      ? "Saved on this device — will send when back online"
+      : "Server busy ("+res.status+") — saved on this device, will retry");
     else toast("Request submitted for Unit "+p.unit);
     if(res.ok && WORKER_URL){ await loadOpenRequests(STATE.site); renderInventory(); }
     switchTab("my");
@@ -1046,15 +1273,22 @@ async function init(){
   const pSort=params.get("sort"); if(pSort){ STATE.sort={key:pSort, dir: params.get("dir")==="desc"?"desc":"asc"}; }
   if(params.get("q")) $("#q").value=params.get("q");
   const pTrade=params.get("trade"); if(pTrade){ $("#fTrade").value = pTrade==="unassigned"?TRADE_NONE:pTrade; }
-  const pSite=params.get("site");
+  const pPer=params.get("per"); if(pPer && [...$("#pgSize").options].some(o=>o.value===pPer)){ $("#pgSize").value=pPer; }
+  const pPage=parseInt(params.get("page")||"",10); if(pPage>1) STATE.page=pPage;   // clamped by renderInventory
+  // Site comes from the URL when deep-linked; otherwise fall back to the last site
+  // picked on this device so switching tabs and returning keeps the selection.
+  const urlSite=params.get("site");
+  const pSite=urlSite || rememberedSite();
   if(pSite && STATE.siteIndex.some(s=>String(s.code)===pSite)){
     sel.value=pSite;
     await selectSite(pSite);
     const pStatus=params.get("status"); if(pStatus){ $("#fStatus").value=pStatus; renderInventory(); }
   } else {
+    if(pSite) rememberSite("");   // stale code (site no longer published) — forget it
     renderInventory();
   }
   STATE.ready=true;
+  syncUrl();   // reflect the restored site (and any clamped page) in the URL so the view stays shareable
   flushQueue();
   window.addEventListener("online", async ()=>{
     await flushQueue();
@@ -1092,5 +1326,6 @@ init();
     });
 })();
 </script>
+<script>(function(){try{var e=document.getElementById("railReceiving");if(!e)return;if(window.__RECEIVING_READY&&nsGet("bac_admin_key"))e.style.display="";if(/[?&]view=receiving/.test(location.search)){e.classList.add("active");var d=document.getElementById("railDeliveries");if(d)d.classList.remove("active");}}catch(_){}})();</script>
 </body>
 </html>

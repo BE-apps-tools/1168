@@ -49,6 +49,8 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
     border-top:none;border-left:none;transform:rotate(45deg);}
   .ic-admin::before{content:"";box-sizing:border-box;position:absolute;left:5px;top:1px;width:10px;height:8px;border:2px solid currentColor;border-bottom:none;border-radius:5px 5px 0 0;}
   .ic-admin::after{content:"";box-sizing:border-box;position:absolute;left:3px;top:8px;width:14px;height:11px;background:currentColor;border-radius:2px;}
+    .ic-recv::before{content:"";box-sizing:border-box;position:absolute;left:1px;top:11px;width:18px;height:8px;border:2px solid currentColor;border-top:none;border-radius:0 0 3px 3px;}
+  .ic-recv::after{content:"";box-sizing:border-box;position:absolute;left:7px;top:2px;width:6px;height:6px;border:2px solid currentColor;border-top:none;border-left:none;transform:rotate(45deg);}
   .ic-guide::before{content:"";box-sizing:border-box;position:absolute;left:1px;top:2px;width:18px;height:16px;border:2px solid currentColor;border-radius:2px;}
   .ic-guide::after{content:"";position:absolute;left:9px;top:2px;width:2px;height:16px;background:currentColor;}
   .rail-lbl{font-family:'Arial Black', Arial, sans-serif;text-transform:uppercase;font-size:9px;letter-spacing:0.04em;display:block;}
@@ -200,7 +202,8 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
 </svg></a>
     <a class="rail-item" href="index.html"><span class="rail-ic ic-hub"></span><span class="rail-lbl">Dashboard</span></a>
     <a class="rail-item" href="inventory.html"><span class="rail-ic ic-assets"></span><span class="rail-lbl">Assets</span></a>
-    <a class="rail-item" href="deliveries.html"><span class="rail-ic ic-deliv"></span><span class="rail-lbl">Deliveries</span></a>
+    <a id="railDeliveries" class="rail-item" href="deliveries.html"><span class="rail-ic ic-deliv"></span><span class="rail-lbl">Deliveries</span></a>
+    <a id="railReceiving" class="rail-item" href="deliveries.html?view=receiving" style="display:none"><span class="rail-ic ic-recv"></span><span class="rail-lbl">Receiving</span></a>
     <a class="rail-item" href="admin.html"><span class="rail-ic ic-admin"></span><span class="rail-lbl">Admin</span></a>
     <a class="rail-item active" href="guide.html"><span class="rail-ic ic-guide"></span><span class="rail-lbl">Guide</span></a>
     <div class="rail-foot">BEI</div>
@@ -319,5 +322,6 @@ function nsDel(k){try{localStorage.removeItem(window.__ns+k);}catch(e){}}
     });
 })();
 </script>
+<script>(function(){try{var e=document.getElementById("railReceiving");if(!e)return;if(window.__RECEIVING_READY&&nsGet("bac_admin_key"))e.style.display="";if(/[?&]view=receiving/.test(location.search)){e.classList.add("active");var d=document.getElementById("railDeliveries");if(d)d.classList.remove("active");}}catch(_){}})();</script>
 </body>
 </html>
